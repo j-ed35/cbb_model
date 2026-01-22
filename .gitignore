@@ -1,0 +1,36 @@
+# Environments
+.venv/
+.env
+.env.*
+!.env.example
+.envrc
+.direnv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+
+# macOS
+.DS_Store
+
+# Project data
+data/processed/
+data/features/
+reports/
+
+HANDOFF.MD
+
+.claude
