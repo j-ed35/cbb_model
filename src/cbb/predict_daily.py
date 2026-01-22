@@ -284,7 +284,9 @@ def extract_features_v2(
         features['team_hca'] = 0.0
     else:
         hca_row = hca_df[hca_df['TeamName'] == home_team_kp]
-        features['team_hca'] = hca_row['hca'].values[0] if len(hca_row) > 0 else 3.5
+        hca_val = hca_row['hca'].values[0] if len(hca_row) > 0 else 3.5
+        hca_val = to_float(hca_val)
+        features['team_hca'] = hca_val if not np.isnan(hca_val) else 3.5
 
     # Four Factors matchups
     ff_a = ff[ff['TeamName'] == home_team_kp]
