@@ -15,7 +15,7 @@ Usage:
 Output:
     - Console table with predictions
     - Optional: reports/predictions/predictions_YYYY-MM-DD.csv
-    - With --html: generates docs/index.html for GitHub Pages
+    - With --html: generates docs/picks.html for GitHub Pages
 """
 
 import pandas as pd
