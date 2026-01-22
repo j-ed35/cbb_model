@@ -8,7 +8,7 @@ Usage:
     python -m src.cbb.generate_html [--date YYYY-MM-DD]
 
 Output:
-    docs/index.html - Main picks page for GitHub Pages
+    docs/picks.html - Daily picks page for GitHub Pages
 """
 
 import pandas as pd
@@ -312,7 +312,7 @@ def main():
         return
 
     # Generate HTML
-    output_path = docs_dir / 'index.html'
+    output_path = docs_dir / 'picks.html'
     generate_html_page(pred_df, pred_date, output_path, args.threshold)
 
     print(f"\nDone! Open {output_path} in a browser or push to GitHub Pages.")
