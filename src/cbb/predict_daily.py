@@ -572,6 +572,7 @@ def main():
 
     env_vars = load_env_vars(project_root)
     api_key = env_vars.get('ODDS_API_KEY', os.environ.get('ODDS_API_KEY', ''))
+    api_key = api_key.strip()
 
     if not api_key:
         console.print("[red]Error: ODDS_API_KEY not found[/red]")
