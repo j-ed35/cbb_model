@@ -32,6 +32,136 @@ from rich.table import Table
 
 console = Console()
 
+DEFAULT_WEIGHTS = {"ridge": 0.1, "gbm": 0.2, "dnn": 0.7}
+FALLBACK_WEIGHTS_NO_DNN = {"ridge": 0.4, "gbm": 0.6}
+
+
+def load_prediction_models(models_dir: Path) -> dict:
+    """Load prediction models once for daily inference."""
+    models: dict = {}
+
+    ridge_path = models_dir / "enhanced_ridge.pkl"
+    gbm_path = models_dir / "enhanced_gbm.pkl"
+
+    if ridge_path.exists():
+        with open(ridge_path, "rb") as f:
+            models["ridge"] = pickle.load(f)
+
+    if gbm_path.exists():
+        with open(gbm_path, "rb") as f:
+            models["gbm"] = pickle.load(f)
+
+    dnn_pt_path = models_dir / "dnn_enhanced.pt"
+    dnn_artifacts_path = models_dir / "dnn_enhanced_artifacts.pkl"
+
+    if dnn_pt_path.exists() and dnn_artifacts_path.exists():
+        try:
+            import torch
+            from src.cbb.models.dnn_enhanced import TwoTowerDNN
+
+            with open(dnn_artifacts_path, "rb") as f:
+                dnn_artifacts = pickle.load(f)
+
+            config = dnn_artifacts["model_config"]
+            model = TwoTowerDNN(
+                team_feature_dim=config["team_feature_dim"],
+                matchup_feature_dim=config["matchup_feature_dim"],
+                context_feature_dim=config["context_feature_dim"],
+            )
+            model.load_state_dict(torch.load(dnn_pt_path, weights_only=True))
+            model.eval()
+
+            models["dnn"] = {
+                "model": model,
+                "scalers": dnn_artifacts["scalers"],
+                "feature_groups": dnn_artifacts.get("feature_groups"),
+            }
+        except Exception as e:
+            console.print(f"[yellow]Warning: DNN unavailable ({e})[/yellow]")
+
+    return models
+
+
+def predict_with_models(features: dict, models: dict) -> dict:
+    """Predict with available models; returns per-model predictions."""
+    preds = {"ridge": np.nan, "gbm": np.nan, "dnn": np.nan}
+
+    # Ridge
+    ridge_data = models.get("ridge")
+    if ridge_data:
+        ridge = ridge_data["model"]
+        scaler = ridge_data["scaler"]
+        feature_cols = ridge_data["feature_cols"]
+        X = np.array([[features.get(col, 0) for col in feature_cols]])
+        X = np.nan_to_num(X, nan=0)
+        X_scaled = scaler.transform(X)
+        preds["ridge"] = ridge.predict(X_scaled)[0]
+
+    # GBM
+    gbm_data = models.get("gbm")
+    if gbm_data:
+        gbm = gbm_data["model"]
+        feature_cols = gbm_data["feature_cols"]
+        X = np.array([[features.get(col, 0) for col in feature_cols]])
+        X = np.nan_to_num(X, nan=0)
+        preds["gbm"] = gbm.predict(X)[0]
+
+    # DNN
+    dnn_data = models.get("dnn")
+    if dnn_data:
+        try:
+            import torch
+            from src.cbb.models.dnn_enhanced import (
+                TEAM_A_FEATURES,
+                TEAM_B_FEATURES,
+                MATCHUP_FEATURES,
+                CONTEXT_FEATURES,
+            )
+
+            model = dnn_data["model"]
+            scalers = dnn_data["scalers"]
+            feature_groups = dnn_data.get("feature_groups") or {
+                "team_a": TEAM_A_FEATURES,
+                "team_b": TEAM_B_FEATURES,
+                "matchup": MATCHUP_FEATURES,
+                "context": CONTEXT_FEATURES,
+            }
+
+            def get_scaled(group_key: str, feat_list: list[str]) -> np.ndarray:
+                vals = np.array([[features.get(f, 0) for f in feat_list]])
+                return scalers[group_key].transform(np.nan_to_num(vals, nan=0))
+
+            team_a = torch.FloatTensor(get_scaled("team_a", feature_groups["team_a"]))
+            team_b = torch.FloatTensor(get_scaled("team_b", feature_groups["team_b"]))
+            matchup = torch.FloatTensor(get_scaled("matchup", feature_groups["matchup"]))
+            context = torch.FloatTensor(get_scaled("context", feature_groups["context"]))
+
+            with torch.no_grad():
+                dnn_pred, _ = model(team_a, team_b, matchup, context)
+                preds["dnn"] = dnn_pred.item()
+        except Exception:
+            preds["dnn"] = np.nan
+
+    return preds
+
+
+def combine_predictions(preds: dict) -> float:
+    """Combine available model predictions with default weights."""
+    valid = {k: v for k, v in preds.items() if pd.notna(v)}
+    if not valid:
+        return np.nan
+
+    if "dnn" not in valid and "ridge" in valid and "gbm" in valid:
+        weights = FALLBACK_WEIGHTS_NO_DNN
+    else:
+        weights = DEFAULT_WEIGHTS
+
+    total_weight = sum(weights.get(k, 0) for k in valid)
+    if total_weight == 0:
+        return np.nan
+
+    return sum(weights.get(k, 0) * valid[k] for k in valid) / total_weight
+
 
 def load_env_vars(project_root: Path) -> dict:
     """Load environment variables from .env file."""
@@ -459,13 +589,29 @@ def generate_predictions(
     team_map: dict,
     models_dir: Path,
     threshold: float
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, str]:
     """Generate predictions for all games."""
     ratings = kenpom_data['ratings']
     team_col = 'TeamName' if 'TeamName' in ratings.columns else 'Team'
     kenpom_teams = set(ratings[team_col].unique())
 
     predictions = []
+    has_data = []
+    has_line = []
+
+    model_preds = {"ridge": [], "gbm": [], "dnn": []}
+    models = load_prediction_models(models_dir)
+
+    calibration = None
+    use_calibration = False
+    calibration_path = models_dir / "calibration_system.pkl"
+    if calibration_path.exists():
+        try:
+            from src.cbb.utils.calibration import CalibratedBettingSystem
+            calibration = CalibratedBettingSystem.load(calibration_path)
+            use_calibration = calibration.fitted
+        except Exception as e:
+            console.print(f"[yellow]Warning: Calibration system unavailable ({e})[/yellow]")
 
     for idx, row in games_df.iterrows():
         home_team = row['home_team']
@@ -476,6 +622,10 @@ def generate_predictions(
         away_kp = map_odds_api_to_kenpom(away_team, kenpom_teams, team_map)
 
         if not home_kp or not away_kp:
+            has_data.append(False)
+            has_line.append(pd.notna(spread_home))
+            for name in model_preds:
+                model_preds[name].append(np.nan)
             predictions.append({
                 'home_team': home_team,
                 'away_team': away_team,
@@ -490,6 +640,10 @@ def generate_predictions(
         features = extract_features_v2(home_kp, away_kp, kenpom_data)
 
         if features is None:
+            has_data.append(False)
+            has_line.append(pd.notna(spread_home))
+            for name in model_preds:
+                model_preds[name].append(np.nan)
             predictions.append({
                 'home_team': home_team,
                 'away_team': away_team,
@@ -501,32 +655,11 @@ def generate_predictions(
             })
             continue
 
-        # Try v2 model, fall back to simple
-        pred_margin = predict_with_v2_model(features, models_dir)
-        if pred_margin is None:
-            pred_margin = simple_kenpom_prediction(features)
-
-        # Calculate edge
-        if spread_home is not None and not np.isnan(pred_margin):
-            edge = pred_margin - (-spread_home)
-        else:
-            edge = np.nan
-
-        # Determine pick using bucket-selective strategy
-        # Only bet on 5-7pt edges (54.9% hit rate in backtest)
-        if np.isnan(edge):
-            pick = 'NO LINE'
-            confidence = ''
-        elif abs(edge) < 5 or abs(edge) >= 7:
-            # Outside profitable bucket - skip
-            pick = 'SKIP'
-            confidence = ''
-        elif edge > 0:
-            pick = f"{home_team} {spread_home:+.1f}"
-            confidence = '**'  # All picks in 5-7pt range are high confidence
-        else:
-            pick = f"{away_team} {-spread_home:+.1f}"
-            confidence = '**'
+        preds = predict_with_models(features, models) if models else {}
+        for name in model_preds:
+            model_preds[name].append(preds.get(name, np.nan))
+        has_data.append(True)
+        has_line.append(pd.notna(spread_home))
 
         predictions.append({
             'home_team': home_team,
@@ -534,13 +667,68 @@ def generate_predictions(
             'home_kp': home_kp,
             'away_kp': away_kp,
             'spread_home': spread_home,
-            'pred_margin': pred_margin,
-            'edge': edge,
-            'pick': pick,
-            'confidence': confidence,
+            'pred_margin': np.nan,
+            'edge': np.nan,
+            'pick': '',
+            'confidence': '',
         })
 
-    return pd.DataFrame(predictions)
+    pred_df = pd.DataFrame(predictions)
+
+    spreads = pd.to_numeric(pred_df["spread_home"], errors="coerce").values
+    model_predictions = {
+        name: np.array(vals, dtype=float) for name, vals in model_preds.items()
+    }
+
+    if use_calibration and calibration:
+        pred_margin = calibration.get_scaled_predictions(model_predictions, spreads)
+        edges = pred_margin - (-spreads)
+        bet_mask = calibration.get_bet_mask(model_predictions, spreads)
+        strategy = "calibrated"
+    else:
+        pred_margin = np.array(
+            [
+                combine_predictions({k: model_predictions[k][i] for k in model_predictions})
+                for i in range(len(pred_df))
+            ],
+            dtype=float,
+        )
+        edges = pred_margin - (-spreads)
+        bet_mask = np.isfinite(edges) & (np.abs(edges) >= threshold)
+        strategy = "threshold"
+
+    pred_df["pred_margin"] = pred_margin
+    pred_df["edge"] = edges
+    pred_df["is_actionable"] = bet_mask
+
+    picks = []
+    confidence = []
+    for i, row in pred_df.iterrows():
+        if not has_line[i]:
+            picks.append("NO LINE")
+            confidence.append("")
+            continue
+        if not has_data[i] or pd.isna(row["edge"]):
+            picks.append("NO DATA")
+            confidence.append("")
+            continue
+        if not row["is_actionable"]:
+            picks.append("SKIP")
+            confidence.append("")
+            continue
+
+        if row["edge"] > 0:
+            picks.append(f"{row['home_team']} {row['spread_home']:+.1f}")
+        else:
+            picks.append(f"{row['away_team']} {-row['spread_home']:+.1f}")
+
+        stars = "*" * min(int(abs(row["edge"]) / 2), 3)
+        confidence.append(stars)
+
+    pred_df["pick"] = picks
+    pred_df["confidence"] = confidence
+
+    return pred_df, strategy
 
 
 def display_predictions(pred_df: pd.DataFrame, threshold: float) -> None:
@@ -561,7 +749,8 @@ def display_predictions(pred_df: pd.DataFrame, threshold: float) -> None:
         margin_str = f"{row['pred_margin']:.1f}" if pd.notna(row['pred_margin']) else "N/A"
         edge_str = f"{row['edge']:+.1f}" if pd.notna(row['edge']) else "N/A"
 
-        if pd.notna(row['edge']) and abs(row['edge']) >= threshold:
+        is_actionable = row.get("is_actionable", False)
+        if pd.notna(row['edge']) and is_actionable:
             edge_str = f"[bold]{edge_str}[/bold]"
 
         table.add_row(
@@ -576,14 +765,19 @@ def display_predictions(pred_df: pd.DataFrame, threshold: float) -> None:
 
     console.print(table)
 
-    actionable = pred_df[pred_df['edge'].abs() >= threshold]
+    if "is_actionable" in pred_df.columns:
+        actionable = pred_df[pred_df["is_actionable"] == True]
+    else:
+        actionable = pred_df[pred_df['edge'].abs() >= threshold]
     console.print(f"\n[bold]Summary:[/bold]")
     console.print(f"  Total games: {len(pred_df)}")
-    console.print(f"  Actionable picks (edge >= {threshold}): {len(actionable)}")
+    console.print(f"  Actionable picks: {len(actionable)}")
 
     if len(actionable) > 0:
         console.print(f"\n[bold green]TOP PICKS:[/bold green]")
-        for _, row in actionable.nlargest(5, 'edge', keep='all').iterrows():
+        actionable = actionable.copy()
+        actionable["abs_edge"] = actionable["edge"].abs()
+        for _, row in actionable.nlargest(5, 'abs_edge', keep='all').iterrows():
             console.print(f"  {row['pick']} ({row['edge']:+.1f} edge)")
 
 
@@ -649,13 +843,20 @@ def main():
 
     # Generate predictions
     console.print("\n[bold]Generating predictions (v2 model)...[/bold]")
-    pred_df = generate_predictions(kenpom_data, games_df, team_map, models_dir, args.threshold)
+    pred_df, strategy = generate_predictions(
+        kenpom_data, games_df, team_map, models_dir, args.threshold
+    )
 
     display_predictions(pred_df, args.threshold)
 
     console.print(f"\n[cyan]Model: Enhanced Ensemble (Ridge + GBM + DNN)[/cyan]")
-    console.print(f"[cyan]Strategy: Bucket-selective (5-7pt edges only)[/cyan]")
-    console.print(f"[cyan]Backtest: 54.9% hit rate, +4.8% ROI[/cyan]")
+    if strategy == "calibrated":
+        console.print(
+            "[cyan]Strategy: Calibrated selection (trained on historical data)[/cyan]"
+        )
+        console.print("[cyan]Backtest reference: 54.9% hit rate on 2025-26 test set[/cyan]")
+    else:
+        console.print(f"[cyan]Strategy: Edge threshold (>= {args.threshold} pts)[/cyan]")
 
     if args.save:
         output_path = predictions_dir / f"predictions_{date.today()}.csv"

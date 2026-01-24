@@ -55,9 +55,14 @@ def generate_picks_table(df: pd.DataFrame, threshold: float = 4.5) -> str:
     # Filter to actionable picks only
     df = df.copy()
     df['edge'] = pd.to_numeric(df['edge'], errors='coerce')
-    actionable = df[df['edge'].abs() >= threshold].copy()
+    if 'is_actionable' in df.columns:
+        actionable = df[df['is_actionable'] == True].copy()
+    else:
+        actionable = df[df['edge'].abs() >= threshold].copy()
 
     if len(actionable) == 0:
+        if 'is_actionable' in df.columns:
+            return "<p>No model-selected picks today</p>"
         return "<p>No actionable picks today (edge threshold: {:.1f} pts)</p>".format(threshold)
 
     # Sort by absolute edge descending
@@ -133,7 +138,13 @@ def generate_all_games_table(df: pd.DataFrame) -> str:
         home = row.get('home_team', '')
 
         # Highlight actionable picks
-        if pd.notna(edge) and abs(edge) >= 4.5:
+        is_actionable = False
+        if 'is_actionable' in row:
+            is_actionable = bool(row.get('is_actionable', False))
+        elif pd.notna(edge) and abs(edge) >= 4.5:
+            is_actionable = True
+
+        if is_actionable:
             style = ' style="background-color: #ffffcc;"'
         else:
             style = ''
@@ -177,7 +188,16 @@ def generate_html_page(
     # Count stats
     total_games = len(pred_df)
     pred_df['edge'] = pd.to_numeric(pred_df['edge'], errors='coerce')
-    actionable = pred_df[pred_df['edge'].abs() >= threshold]
+    if 'is_actionable' in pred_df.columns:
+        actionable = pred_df[pred_df['is_actionable'] == True]
+        selection_summary = "model-selected picks"
+        selection_detail = "Selection: calibrated filter trained on historical data"
+        picks_intro = "Only showing model-selected picks. Sorted by edge strength."
+    else:
+        actionable = pred_df[pred_df['edge'].abs() >= threshold]
+        selection_summary = f"picks with edge >= {threshold} pts"
+        selection_detail = "Selection: edge threshold"
+        picks_intro = f"Only showing games with edge >= {threshold} points. Sorted by edge strength."
     num_picks = len(actionable)
 
     picks_table = generate_picks_table(pred_df, threshold)
@@ -253,12 +273,12 @@ def generate_html_page(
   <p class="updated">Predictions for: <b>{pred_date}</b> | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}</p>
 
   <div class="summary">
-    <b>Summary:</b> {num_picks} actionable picks from {total_games} games (edge >= {threshold} pts)<br>
-    <b>Model:</b> Ridge + GBM + DNN ensemble | Backtest: 52.9% hit rate, +1.1% ROI
+    <b>Summary:</b> {num_picks} {selection_summary} from {total_games} games<br>
+    <b>Model:</b> Ridge + GBM + DNN ensemble | {selection_detail}
   </div>
 
   <h2>Today's Picks</h2>
-  <p>Only showing games with edge >= {threshold} points. Sorted by edge strength.</p>
+  <p>{picks_intro}</p>
   {picks_table}
 
   <hr>
@@ -272,9 +292,9 @@ def generate_html_page(
     - <b>Spread:</b> Vegas line (+ means home team is underdog)<br>
     - <b>Pred:</b> Model's predicted margin (home team perspective)<br>
     - <b>Edge:</b> Pred minus implied spread. Positive = bet home cover, Negative = bet away cover<br>
-    - <b>Conf:</b> * = 4.5-6 pts, ** = 6-8 pts, *** = 8+ pts edge<br>
+    - <b>Conf:</b> More stars = larger model edge<br>
     <br>
-    <b>Betting strategy:</b> Only bet when |edge| >= 4.5 points. Backtest shows 52.9% win rate (breakeven is 52.4% at -110 odds).
+    <b>Betting strategy:</b> Picks are filtered using the model's historical calibration rules.
   </div>
 
   <p class="updated">
