@@ -203,39 +203,6 @@ class TwoTowerDNN(nn.Module):
         return margin.squeeze(-1), attn_weight
 
 
-class ResidualMLP(nn.Module):
-    """MLP with residual connections for stable training."""
-
-    def __init__(self, input_dim: int, hidden_dims: list[int] = [64, 32], dropout: float = 0.2):
-        super().__init__()
-
-        layers = []
-        prev_dim = input_dim
-
-        for i, hidden_dim in enumerate(hidden_dims):
-            block = nn.Sequential(
-                nn.Linear(prev_dim, hidden_dim),
-                nn.BatchNorm1d(hidden_dim),
-                nn.ReLU(),
-                nn.Dropout(dropout),
-            )
-            layers.append(block)
-
-            # Add residual connection if dimensions match
-            if prev_dim == hidden_dim:
-                layers.append(nn.Identity())  # Placeholder for residual
-
-            prev_dim = hidden_dim
-
-        self.layers = nn.ModuleList(layers)
-        self.output = nn.Linear(prev_dim, 1)
-
-    def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
-        return self.output(x).squeeze(-1)
-
-
 def prepare_dnn_features(
     df: pd.DataFrame,
     feature_groups: dict[str, list[str]]

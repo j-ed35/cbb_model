@@ -26,132 +26,95 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.preprocessing import StandardScaler
 
-from src.cbb.utils.evaluation import evaluate_ats, evaluate_with_threshold, tune_threshold
+from src.cbb.features.prepare import prepare_ats_data
+from src.cbb.models.classical import train_ridge_gbm
+from src.cbb.utils.evaluation import (
+    evaluate_ats,
+    evaluate_with_threshold,
+    tune_threshold,
+)
 
 
 # Feature groups for ablation studies
 KENPOM_CORE = [
-    "kp_adj_em_a", "kp_adj_em_b", "kp_adj_em_diff",
-    "kp_adj_o_a", "kp_adj_o_b",
-    "kp_adj_d_a", "kp_adj_d_b",
-    "kp_tempo_a", "kp_tempo_b", "kp_tempo_avg",
+    "kp_adj_em_a",
+    "kp_adj_em_b",
+    "kp_adj_em_diff",
+    "kp_adj_o_a",
+    "kp_adj_o_b",
+    "kp_adj_d_a",
+    "kp_adj_d_b",
+    "kp_tempo_a",
+    "kp_tempo_b",
+    "kp_tempo_avg",
 ]
 
 # NOTE: Rankings are not available in historical KenPom snapshots (pre-2025)
 # Only include these when using recent daily snapshots
 KENPOM_RANKINGS = [
-    "kp_rank_em_a", "kp_rank_em_b",
-    "kp_rank_o_a", "kp_rank_o_b",
-    "kp_rank_d_a", "kp_rank_d_b",
+    "kp_rank_em_a",
+    "kp_rank_em_b",
+    "kp_rank_o_a",
+    "kp_rank_o_b",
+    "kp_rank_d_a",
+    "kp_rank_d_b",
 ]
 
 KENPOM_MATCHUP = [
-    "kp_o_vs_d_a", "kp_o_vs_d_b",
+    "kp_o_vs_d_a",
+    "kp_o_vs_d_b",
     "kp_tempo_diff",
 ]
 
 SITUATIONAL = [
-    "rest_days_a", "rest_days_b", "rest_diff",
-    "b2b_a", "b2b_b",
+    "rest_days_a",
+    "rest_days_b",
+    "rest_diff",
+    "b2b_a",
+    "b2b_b",
 ]
 
 ROLLING_ATS = [
-    "rolling_ats_a", "rolling_ats_b", "rolling_ats_diff",
+    "rolling_ats_a",
+    "rolling_ats_b",
+    "rolling_ats_diff",
 ]
 
 RECENCY_WEIGHTED = [
-    "ew_margin_a", "ew_margin_b", "ew_margin_diff",
+    "ew_margin_a",
+    "ew_margin_b",
+    "ew_margin_diff",
 ]
 
 CONTEXT = [
-    "is_home_a", "is_neutral",
+    "is_home_a",
+    "is_neutral",
 ]
 
 # Exclude rankings since they're not available in historical data
 ALL_FEATURES = (
-    KENPOM_CORE + KENPOM_MATCHUP + SITUATIONAL + ROLLING_ATS + RECENCY_WEIGHTED + CONTEXT
+    KENPOM_CORE
+    + KENPOM_MATCHUP
+    + SITUATIONAL
+    + ROLLING_ATS
+    + RECENCY_WEIGHTED
+    + CONTEXT
 )
 
 
 def load_enhanced_features(project_root: Path) -> pd.DataFrame:
     """Load enhanced feature dataset."""
-    features_path = project_root / "data" / "features" / "games_features_enhanced.parquet"
+    features_path = (
+        project_root / "data" / "features" / "games_features_enhanced.parquet"
+    )
 
     if not features_path.exists():
         print("Enhanced features not found. Generating...")
         from src.cbb.features.enhanced_features import main as build_features
+
         build_features()
 
     return pd.read_parquet(features_path)
-
-
-def prepare_train_data(
-    features_df: pd.DataFrame,
-    feature_cols: list[str],
-    require_spread: bool = True,
-    require_kenpom: bool = True,
-) -> tuple[pd.DataFrame, list[str]]:
-    """
-    Prepare data for training.
-
-    Filters:
-    - Requires spread data (for ATS evaluation)
-    - Optionally requires KenPom match
-    - Drops rows with missing feature values
-    """
-    df = features_df.copy()
-
-    if require_spread:
-        df = df[df["spread_a"].notna()]
-
-    if require_kenpom:
-        df = df[df["kp_matched"] == True]
-
-    # Check which features are available
-    available = [c for c in feature_cols if c in df.columns]
-    missing = [c for c in feature_cols if c not in df.columns]
-
-    if missing:
-        print(f"Warning: Missing features: {missing}")
-
-    # Drop rows with NaN in available features
-    df = df.dropna(subset=available + ["final_margin_a", "cover_a"])
-
-    return df, available
-
-
-def train_margin_models(
-    train_df: pd.DataFrame,
-    feature_cols: list[str],
-) -> tuple[Ridge, GradientBoostingRegressor, StandardScaler]:
-    """
-    Train margin regression models (Ridge + GBM).
-
-    Returns: ridge_model, gbm_model, scaler
-    """
-    X = train_df[feature_cols].values
-    y = train_df["final_margin_a"].values
-
-    # Scale for Ridge
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    # Ridge regression
-    ridge = Ridge(alpha=1.0)
-    ridge.fit(X_scaled, y)
-
-    # Gradient Boosting
-    gbm = GradientBoostingRegressor(
-        n_estimators=200,
-        max_depth=4,
-        learning_rate=0.05,
-        subsample=0.8,
-        min_samples_leaf=20,
-        random_state=42,
-    )
-    gbm.fit(X, y)
-
-    return ridge, gbm, scaler
 
 
 def ensemble_predict(
@@ -190,7 +153,7 @@ def run_cross_validation(
 
     Uses TimeSeriesSplit to ensure no lookahead bias.
     """
-    df, available_cols = prepare_train_data(features_df, feature_cols)
+    df, available_cols = prepare_ats_data(features_df, feature_cols)
     df = df.sort_values("date").reset_index(drop=True)
 
     print(f"Cross-validation on {len(df):,} games with {len(available_cols)} features")
@@ -213,20 +176,9 @@ def run_cross_validation(
         spreads_test = spreads[test_idx]
         covers_test = covers[test_idx]
 
-        # Scale
-        scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
-
         # Train models
-        ridge = Ridge(alpha=1.0)
-        ridge.fit(X_train_scaled, y_train)
-
-        gbm = GradientBoostingRegressor(
-            n_estimators=200, max_depth=4, learning_rate=0.05,
-            subsample=0.8, min_samples_leaf=20, random_state=42
-        )
-        gbm.fit(X_train, y_train)
+        ridge, gbm, scaler = train_ridge_gbm(X_train, y_train)
+        X_test_scaled = scaler.transform(X_test)
 
         # Predictions
         ridge_pred = ridge.predict(X_test_scaled)
@@ -259,9 +211,15 @@ def run_cross_validation(
     for model in ["Ridge", "GBM", "Ensemble"]:
         model_results = results_df[results_df["model"] == model]
         print(f"\n{model}:")
-        print(f"  MAE:      {model_results['mae'].mean():.2f} +/- {model_results['mae'].std():.2f}")
-        print(f"  Hit Rate: {model_results['hit_rate'].mean():.3f} +/- {model_results['hit_rate'].std():.3f}")
-        print(f"  ROI:      {model_results['roi'].mean():.3f} +/- {model_results['roi'].std():.3f}")
+        print(
+            f"  MAE:      {model_results['mae'].mean():.2f} +/- {model_results['mae'].std():.2f}"
+        )
+        print(
+            f"  Hit Rate: {model_results['hit_rate'].mean():.3f} +/- {model_results['hit_rate'].std():.3f}"
+        )
+        print(
+            f"  ROI:      {model_results['roi'].mean():.3f} +/- {model_results['roi'].std():.3f}"
+        )
 
     return results_df
 
@@ -274,7 +232,7 @@ def run_holdout_evaluation(
     test_seasons: list[str],
 ) -> tuple[dict[str, Any], Ridge, GradientBoostingRegressor, StandardScaler, list[str]]:
     """Run evaluation with fixed train/val/test split."""
-    df, available_cols = prepare_train_data(features_df, feature_cols)
+    df, available_cols = prepare_ats_data(features_df, feature_cols)
 
     train_df = df[df["season"].isin(train_seasons)]
     val_df = df[df["season"].isin(val_seasons)]
@@ -285,14 +243,15 @@ def run_holdout_evaluation(
     print(f"Test:  {len(test_df):,} games ({test_seasons})")
 
     # Train models
-    ridge, gbm, scaler = train_margin_models(train_df, available_cols)
+    X_train = train_df[available_cols].values
+    y_train = train_df["final_margin_a"].values
+    ridge, gbm, scaler = train_ridge_gbm(X_train, y_train)
 
     # Feature importance from GBM
     print("\nTop 10 feature importances (GBM):")
-    importance = pd.DataFrame({
-        "feature": available_cols,
-        "importance": gbm.feature_importances_
-    }).sort_values("importance", ascending=False)
+    importance = pd.DataFrame(
+        {"feature": available_cols, "importance": gbm.feature_importances_}
+    ).sort_values("importance", ascending=False)
     print(importance.head(10).to_string(index=False))
 
     results: dict[str, Any] = {}
@@ -370,7 +329,9 @@ def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Train enhanced ATS models")
     parser.add_argument("--cv", action="store_true", help="Run cross-validation")
-    parser.add_argument("--ablation", action="store_true", help="Run feature ablation study")
+    parser.add_argument(
+        "--ablation", action="store_true", help="Run feature ablation study"
+    )
     args = parser.parse_args()
 
     project_root = Path(__file__).parent.parent.parent
@@ -395,49 +356,66 @@ def main() -> None:
             "KenPom Core Only": KENPOM_CORE + CONTEXT,
             "+ Rankings": KENPOM_CORE + KENPOM_RANKINGS + CONTEXT,
             "+ Matchup": KENPOM_CORE + KENPOM_RANKINGS + KENPOM_MATCHUP + CONTEXT,
-            "+ Situational": KENPOM_CORE + KENPOM_RANKINGS + KENPOM_MATCHUP + SITUATIONAL + CONTEXT,
-            "+ Rolling ATS": KENPOM_CORE + KENPOM_RANKINGS + KENPOM_MATCHUP + SITUATIONAL + ROLLING_ATS + CONTEXT,
+            "+ Situational": KENPOM_CORE
+            + KENPOM_RANKINGS
+            + KENPOM_MATCHUP
+            + SITUATIONAL
+            + CONTEXT,
+            "+ Rolling ATS": KENPOM_CORE
+            + KENPOM_RANKINGS
+            + KENPOM_MATCHUP
+            + SITUATIONAL
+            + ROLLING_ATS
+            + CONTEXT,
             "All Features": ALL_FEATURES,
         }
 
         ablation_results = []
         for name, features in feature_sets.items():
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"Testing: {name}")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
 
             results, _, _, _, _ = run_holdout_evaluation(
-                features_df, features,
+                features_df,
+                features,
                 train_seasons=["2022-23", "2023-24"],
                 val_seasons=["2024-25"],
-                test_seasons=["2025-26"]
+                test_seasons=["2025-26"],
             )
 
-            ablation_results.append({
-                "feature_set": name,
-                "n_features": len([f for f in features if f in features_df.columns]),
-                "test_hit_rate": results.get("Ensemble_test", {}).get("hit_rate", 0),
-                "test_roi": results.get("Ensemble_test", {}).get("roi", 0),
-            })
+            ablation_results.append(
+                {
+                    "feature_set": name,
+                    "n_features": len(
+                        [f for f in features if f in features_df.columns]
+                    ),
+                    "test_hit_rate": results.get("Ensemble_test", {}).get(
+                        "hit_rate", 0
+                    ),
+                    "test_roi": results.get("Ensemble_test", {}).get("roi", 0),
+                }
+            )
 
         ablation_df = pd.DataFrame(ablation_results)
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("ABLATION STUDY SUMMARY")
-        print("="*60)
+        print("=" * 60)
         print(ablation_df.to_string(index=False))
         ablation_df.to_csv(metrics_dir / "ablation_results.csv", index=False)
         return
 
     # Default: holdout evaluation with all features
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ENHANCED MODEL TRAINING")
-    print("="*60)
+    print("=" * 60)
 
     results, ridge, gbm, scaler, feature_cols = run_holdout_evaluation(
-        features_df, ALL_FEATURES,
+        features_df,
+        ALL_FEATURES,
         train_seasons=["2022-23", "2023-24"],
         val_seasons=["2024-25"],
-        test_seasons=["2025-26"]
+        test_seasons=["2025-26"],
     )
 
     # Save models
@@ -449,14 +427,17 @@ def main() -> None:
 
     # Save ensemble config
     with open(models_dir / "enhanced_ensemble.pkl", "wb") as f:
-        pickle.dump({
-            "ridge": ridge,
-            "gbm": gbm,
-            "scaler": scaler,
-            "feature_cols": feature_cols,
-            "weights": (0.4, 0.6),
-            "threshold": results.get("threshold", 0),
-        }, f)
+        pickle.dump(
+            {
+                "ridge": ridge,
+                "gbm": gbm,
+                "scaler": scaler,
+                "feature_cols": feature_cols,
+                "weights": (0.4, 0.6),
+                "threshold": results.get("threshold", 0),
+            },
+            f,
+        )
 
     print(f"\n Saved models to {models_dir}")
 
@@ -465,7 +446,9 @@ def main() -> None:
         "test_hit_rate": results.get("Ensemble_test", {}).get("hit_rate", 0),
         "test_roi": results.get("Ensemble_test", {}).get("roi", 0),
         "threshold": results.get("threshold", 0),
-        "threshold_hit_rate": results.get("test_threshold_metrics", {}).get("hit_rate", 0),
+        "threshold_hit_rate": results.get("test_threshold_metrics", {}).get(
+            "hit_rate", 0
+        ),
         "threshold_roi": results.get("test_threshold_metrics", {}).get("roi", 0),
         "threshold_n_bets": results.get("test_threshold_metrics", {}).get("n_bets", 0),
     }

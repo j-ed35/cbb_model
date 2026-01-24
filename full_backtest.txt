@@ -1,0 +1,211 @@
+Last login: Fri Jan 23 23:03:00 on ttys000
+jacobederer@jacobs-imac ~ % cd /Users/jacobederer/Repositories/cbb
+source .venv/bin/activate
+(cbb) jacobederer@jacobs-imac cbb % uv run python -m src.cbb.backtest_selective
+Loading models...
+  Loaded ridge
+  Loaded gbm
+  Loaded dnn
+
+Loading features...
+Loaded 10,830 usable games
+Train: 5,701
+Val:   2,820
+Test:  2,309
+
+Generating predictions...
+
+======================================================================
+EDGE BUCKET ANALYSIS (Validation Set)
+======================================================================
+  bucket  n_games  hit_rate       roi
+ 0-1 pts      300  0.443333 -0.153636
+ 1-2 pts      328  0.466463 -0.109479
+ 2-3 pts      343  0.492711 -0.059369
+ 3-4 pts      344  0.514535 -0.017706
+ 4-5 pts      273  0.520147 -0.006993
+ 5-7 pts      459  0.527233  0.006536
+7-10 pts      386  0.520725 -0.005888
+ 10+ pts      349  0.524355  0.001042
+
+======================================================================
+THRESHOLD SWEEP (Validation Set)
+======================================================================
+ n_games  threshold  hit_rate       roi  n_bets  pct_games_bet
+    2820        0.0  0.503235 -0.039278    2782       0.986525
+    2820        0.5  0.507219 -0.031673    2632       0.933333
+    2820        1.0  0.510475 -0.025456    2482       0.880142
+    2820        1.5  0.514668 -0.017452    2318       0.821986
+    2820        2.0  0.517177 -0.012661    2154       0.763830
+    2820        2.5  0.523116 -0.001325    1990       0.705674
+    2820        3.0  0.521811 -0.003815    1811       0.642199
+    2820        3.5  0.517748 -0.011572    1634       0.579433
+    2820        4.0  0.523517 -0.000558    1467       0.520213
+    2820        5.0  0.524288  0.000914    1194       0.423404
+    2820        6.0  0.518677 -0.009799     937       0.332270
+    2820        7.0  0.522449 -0.002597     735       0.260638
+
+Optimal threshold (min 50 bets): 5.0 pts
+
+======================================================================
+MODEL AGREEMENT ANALYSIS (Validation Set)
+======================================================================
+        scenario  n_games  hit_rate       roi
+All models agree     1978  0.514156 -0.018430
+ Models disagree      804  0.496269 -0.052578
+
+======================================================================
+TEST SET PERFORMANCE
+======================================================================
+
+All bets (no threshold):
+  Hit Rate: 0.517
+  ROI: -0.013
+  N bets: 2297
+
+Selective betting (threshold=5.0):
+  Hit Rate: 0.525
+  ROI: 0.003
+  N bets: 1015
+
+======================================================================
+EDGE BUCKET ANALYSIS (Test Set)
+======================================================================
+  bucket  n_games  hit_rate       roi
+ 0-1 pts      240  0.491667 -0.061364
+ 1-2 pts      271  0.516605 -0.013754
+ 2-3 pts      263  0.536122  0.023505
+ 3-4 pts      254  0.511811 -0.022906
+ 4-5 pts      254  0.496063 -0.052971
+ 5-7 pts      349  0.555874  0.061214
+7-10 pts      305  0.501639 -0.042325
+ 10+ pts      361  0.515235 -0.016369
+
+======================================================================
+MODEL AGREEMENT ANALYSIS (Test Set)
+======================================================================
+        scenario  n_games  hit_rate       roi
+All models agree     1568  0.521046 -0.005276
+ Models disagree      729  0.511660 -0.023195
+
+======================================================================
+FINAL VERDICT
+======================================================================
+
+Strategy 1: Bet all games
+  Hit Rate: 51.7%
+  Status: Below breakeven
+
+Strategy 2: Selective betting (|edge| >= 5.0)
+  Hit Rate: 52.5%
+  N bets: 1015 (44.0% of games)
+  Status: PROFITABLE
+
+======================================================================
+SEARCHING FOR PROFITABLE THRESHOLDS ON TEST
+======================================================================
+Threshold    0: 0.517 hit rate, -0.013 ROI, 2297 bets 
+Threshold  0.5: 0.519 hit rate, -0.009 ROI, 2172 bets 
+Threshold    1: 0.520 hit rate, -0.007 ROI, 2057 bets 
+Threshold  1.5: 0.522 hit rate, -0.003 ROI, 1938 bets 
+Threshold    2: 0.521 hit rate, -0.006 ROI, 1786 bets 
+Threshold  2.5: 0.518 hit rate, -0.011 ROI, 1646 bets 
+Threshold    3: 0.518 hit rate, -0.011 ROI, 1523 bets 
+Threshold  3.5: 0.516 hit rate, -0.014 ROI, 1396 bets 
+Threshold    4: 0.519 hit rate, -0.009 ROI, 1269 bets 
+Threshold  4.5: 0.529 hit rate, +0.010 ROI, 1145 bets PROFITABLE
+Threshold    5: 0.525 hit rate, +0.003 ROI, 1015 bets PROFITABLE
+Threshold    6: 0.507 hit rate, -0.031 ROI,  810 bets 
+Threshold    7: 0.509 hit rate, -0.028 ROI,  666 bets 
+Threshold    8: 0.510 hit rate, -0.026 ROI,  549 bets 
+
+======================================================================
+FINE-GRAINED SEARCH (4.0 - 6.0)
+======================================================================
+Threshold 4.00: 0.519 hit rate, -0.009 ROI, 1269 bets 
+Threshold 4.25: 0.527 hit rate, +0.007 ROI, 1202 bets PROFITABLE
+Threshold 4.50: 0.529 hit rate, +0.010 ROI, 1145 bets PROFITABLE
+Threshold 4.75: 0.529 hit rate, +0.011 ROI, 1073 bets PROFITABLE
+Threshold 5.00: 0.525 hit rate, +0.003 ROI, 1015 bets PROFITABLE
+Threshold 5.25: 0.517 hit rate, -0.013 ROI,  963 bets 
+Threshold 5.50: 0.516 hit rate, -0.015 ROI,  901 bets 
+Threshold 5.75: 0.509 hit rate, -0.027 ROI,  848 bets 
+Threshold 6.00: 0.507 hit rate, -0.031 ROI,  810 bets 
+
+Saved results to /Users/jacobederer/Repositories/cbb/reports/metrics/selective_betting_summary.csv
+(cbb) jacobederer@jacobs-imac cbb % git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	deleted:    src/cbb/backtest_ats.py
+	modified:   src/cbb/backtest_selective.py
+	modified:   src/cbb/ensemble_final.py
+	modified:   src/cbb/features/enhanced_features.py
+	modified:   src/cbb/features/kenpom.py
+	deleted:    src/cbb/train_ats_baseline.py
+	modified:   src/cbb/train_enhanced.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	data/kenpom_extended/
+	src/cbb/features/build_features_v2.py
+	src/cbb/ingest/fetch_kenpom_extended.py
+	src/cbb/train_v2_full.py
+	src/cbb/utils/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+(cbb) jacobederer@jacobs-imac cbb % git add .
+(cbb) jacobederer@jacobs-imac cbb % git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   data/kenpom_extended/four_factors.parquet
+	new file:   data/kenpom_extended/hca.parquet
+	new file:   data/kenpom_extended/height_experience.parquet
+	new file:   data/kenpom_extended/team_stats.parquet
+	deleted:    src/cbb/backtest_ats.py
+	modified:   src/cbb/backtest_selective.py
+	modified:   src/cbb/ensemble_final.py
+	new file:   src/cbb/features/build_features_v2.py
+	modified:   src/cbb/features/enhanced_features.py
+	modified:   src/cbb/features/kenpom.py
+	new file:   src/cbb/ingest/fetch_kenpom_extended.py
+	deleted:    src/cbb/train_ats_baseline.py
+	modified:   src/cbb/train_enhanced.py
+	new file:   src/cbb/train_v2_full.py
+	new file:   src/cbb/utils/__init__.py
+	new file:   src/cbb/utils/evaluation.py
+	new file:   src/cbb/utils/model_loader.py
+	new file:   src/cbb/utils/team_names.py
+
+(cbb) jacobederer@jacobs-imac cbb % git commit -m "implement v3 backtest with 52.5 hit rate"
+[master a008c8f] implement v3 backtest with 52.5 hit rate
+ 18 files changed, 2615 insertions(+), 2221 deletions(-)
+ create mode 100644 data/kenpom_extended/four_factors.parquet
+ create mode 100644 data/kenpom_extended/hca.parquet
+ create mode 100644 data/kenpom_extended/height_experience.parquet
+ create mode 100644 data/kenpom_extended/team_stats.parquet
+ delete mode 100644 src/cbb/backtest_ats.py
+ create mode 100644 src/cbb/features/build_features_v2.py
+ create mode 100644 src/cbb/ingest/fetch_kenpom_extended.py
+ delete mode 100644 src/cbb/train_ats_baseline.py
+ create mode 100644 src/cbb/train_v2_full.py
+ create mode 100644 src/cbb/utils/__init__.py
+ create mode 100644 src/cbb/utils/evaluation.py
+ create mode 100644 src/cbb/utils/model_loader.py
+ create mode 100644 src/cbb/utils/team_names.py
+(cbb) jacobederer@jacobs-imac cbb % git push
+To https://github.com/j-ed35/cbb_model.git
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'https://github.com/j-ed35/cbb_model.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+(cbb) jacobederer@jacobs-imac cbb % 

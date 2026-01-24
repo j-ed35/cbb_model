@@ -51,8 +51,17 @@ def load_all_kenpom_snapshots(kenpom_dir: Path) -> pd.DataFrame:
 
     # Ensure numeric columns are properly typed
     numeric_cols = [
-        "AdjEM", "AdjOE", "AdjDE", "AdjTempo", "Tempo", "OE", "DE",
-        "RankAdjEM", "RankAdjOE", "RankAdjDE", "RankAdjTempo",
+        "AdjEM",
+        "AdjOE",
+        "AdjDE",
+        "AdjTempo",
+        "Tempo",
+        "OE",
+        "DE",
+        "RankAdjEM",
+        "RankAdjOE",
+        "RankAdjDE",
+        "RankAdjTempo",
     ]
     for col in numeric_cols:
         if col in combined.columns:
@@ -88,16 +97,24 @@ def compute_rest_days_vectorized(games_df: pd.DataFrame) -> pd.DataFrame:
     ).dt.days
     all_team_games["rest_days"] = all_team_games["rest_days"].fillna(7).clip(upper=14)
 
-    # Create lookup dictionaries for fast access
-    rest_lookup = all_team_games.set_index(["team", "date"])["rest_days"].to_dict()
+    rest_df = (
+        all_team_games[["team", "date", "rest_days"]]
+        .groupby(["team", "date"], as_index=False)
+        .first()
+    )
 
-    # Map rest days back to games
-    df["rest_days_a"] = df.apply(
-        lambda row: rest_lookup.get((row["team_a"], row["date"]), 7), axis=1
+    df = df.merge(
+        rest_df.rename(columns={"team": "team_a", "rest_days": "rest_days_a"}),
+        on=["team_a", "date"],
+        how="left",
     )
-    df["rest_days_b"] = df.apply(
-        lambda row: rest_lookup.get((row["team_b"], row["date"]), 7), axis=1
+    df = df.merge(
+        rest_df.rename(columns={"team": "team_b", "rest_days": "rest_days_b"}),
+        on=["team_b", "date"],
+        how="left",
     )
+    df["rest_days_a"] = df["rest_days_a"].fillna(7)
+    df["rest_days_b"] = df["rest_days_b"].fillna(7)
     df["rest_diff"] = df["rest_days_a"] - df["rest_days_b"]
 
     # Back-to-back indicators
@@ -141,16 +158,20 @@ def compute_rolling_ats_vectorized(
     )
     all_ats["rolling_ats"] = all_ats["rolling_ats"].fillna(0.5)
 
-    # Create lookup
-    ats_lookup = all_ats.groupby(["team", "date"])["rolling_ats"].first().to_dict()
+    ats_df = all_ats.groupby(["team", "date"], as_index=False)["rolling_ats"].first()
 
-    # Map back to games
-    df["rolling_ats_a"] = df.apply(
-        lambda row: ats_lookup.get((row["team_a"], row["date"]), 0.5), axis=1
+    df = df.merge(
+        ats_df.rename(columns={"team": "team_a", "rolling_ats": "rolling_ats_a"}),
+        on=["team_a", "date"],
+        how="left",
     )
-    df["rolling_ats_b"] = df.apply(
-        lambda row: ats_lookup.get((row["team_b"], row["date"]), 0.5), axis=1
+    df = df.merge(
+        ats_df.rename(columns={"team": "team_b", "rolling_ats": "rolling_ats_b"}),
+        on=["team_b", "date"],
+        how="left",
     )
+    df["rolling_ats_a"] = df["rolling_ats_a"].fillna(0.5)
+    df["rolling_ats_b"] = df["rolling_ats_b"].fillna(0.5)
     df["rolling_ats_diff"] = df["rolling_ats_a"] - df["rolling_ats_b"]
 
     return df
@@ -190,22 +211,23 @@ def compute_recency_weighted_stats_vectorized(
         lambda x: x.shift(1).ewm(halflife=half_life, min_periods=3).mean()
     )
 
-    # Create lookups
-    ew_margin_lookup = all_stats.groupby(["team", "date"])["ew_margin"].first().to_dict()
-    ew_ppg_lookup = all_stats.groupby(["team", "date"])["ew_ppg"].first().to_dict()
+    ew_stats = all_stats.groupby(["team", "date"], as_index=False)[
+        ["ew_margin", "ew_ppg"]
+    ].first()
 
-    # Map back to games
-    df["ew_margin_a"] = df.apply(
-        lambda row: ew_margin_lookup.get((row["team_a"], row["date"]), np.nan), axis=1
+    df = df.merge(
+        ew_stats.rename(
+            columns={"team": "team_a", "ew_margin": "ew_margin_a", "ew_ppg": "ew_ppg_a"}
+        ),
+        on=["team_a", "date"],
+        how="left",
     )
-    df["ew_margin_b"] = df.apply(
-        lambda row: ew_margin_lookup.get((row["team_b"], row["date"]), np.nan), axis=1
-    )
-    df["ew_ppg_a"] = df.apply(
-        lambda row: ew_ppg_lookup.get((row["team_a"], row["date"]), np.nan), axis=1
-    )
-    df["ew_ppg_b"] = df.apply(
-        lambda row: ew_ppg_lookup.get((row["team_b"], row["date"]), np.nan), axis=1
+    df = df.merge(
+        ew_stats.rename(
+            columns={"team": "team_b", "ew_margin": "ew_margin_b", "ew_ppg": "ew_ppg_b"}
+        ),
+        on=["team_b", "date"],
+        how="left",
     )
     df["ew_margin_diff"] = df["ew_margin_a"] - df["ew_margin_b"]
 
@@ -372,9 +394,16 @@ def build_enhanced_features(
 
     # Select and order columns for output
     core_cols = [
-        "game_key", "season", "date", "team_a", "team_b",
-        "is_home_a", "is_neutral",
-        "spread_a", "final_margin_a", "cover_a",
+        "game_key",
+        "season",
+        "date",
+        "team_a",
+        "team_b",
+        "is_home_a",
+        "is_neutral",
+        "spread_a",
+        "final_margin_a",
+        "cover_a",
     ]
     kenpom_cols = [c for c in df.columns if c.startswith("kp_")]
     rest_cols = ["rest_days_a", "rest_days_b", "rest_diff", "b2b_a", "b2b_b"]
@@ -420,10 +449,12 @@ def main() -> pd.DataFrame:
     print(f"Mapped {len(team_map)} teams")
 
     # Save improved mapping
-    mapping_df = pd.DataFrame([
-        {"raw_name": k, "kenpom_name": v, "notes": "auto-matched"}
-        for k, v in team_map.items()
-    ])
+    mapping_df = pd.DataFrame(
+        [
+            {"raw_name": k, "kenpom_name": v, "notes": "auto-matched"}
+            for k, v in team_map.items()
+        ]
+    )
     mapping_df.to_csv(processed_dir / "team_name_map_v2.csv", index=False)
 
     # Build features
@@ -434,11 +465,13 @@ def main() -> pd.DataFrame:
     with_spread = features_df["spread_a"].notna().sum()
     print(f"\nFeature dataset stats:")
     print(f"  Total games: {len(features_df):,}")
-    print(f"  KenPom matched: {kp_matched:,} ({kp_matched/len(features_df):.1%})")
-    print(f"  With spread: {with_spread:,} ({with_spread/len(features_df):.1%})")
+    print(f"  KenPom matched: {kp_matched:,} ({kp_matched / len(features_df):.1%})")
+    print(f"  With spread: {with_spread:,} ({with_spread / len(features_df):.1%})")
 
     # Save
-    features_df.to_parquet(features_dir / "games_features_enhanced.parquet", index=False)
+    features_df.to_parquet(
+        features_dir / "games_features_enhanced.parquet", index=False
+    )
     print(f"\n✓ Saved to {features_dir / 'games_features_enhanced.parquet'}")
 
     return features_df

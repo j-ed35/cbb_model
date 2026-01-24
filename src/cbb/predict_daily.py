@@ -355,28 +355,26 @@ def extract_features_v2(
 
 
 def predict_with_v2_model(features: dict, models_dir: Path) -> Optional[float]:
-    """Make prediction using v2 ensemble model (Ridge + GBM + DNN)."""
-    model_path = models_dir / 'enhanced_v2_full.pkl'
-    dnn_path = models_dir / 'enhanced_v2_full_dnn.pt'
-    dnn_config_path = models_dir / 'enhanced_v2_full_dnn_config.pkl'
+    """Make prediction using enhanced ensemble model (Ridge + GBM + DNN)."""
+    ridge_path = models_dir / 'enhanced_ridge.pkl'
+    gbm_path = models_dir / 'enhanced_gbm.pkl'
 
-    if not model_path.exists():
+    if not ridge_path.exists() or not gbm_path.exists():
         return None
 
     try:
-        import torch
-        from src.cbb.train_v2_full import SimpleDNN
+        with open(ridge_path, 'rb') as f:
+            ridge_data = pickle.load(f)
 
-        with open(model_path, 'rb') as f:
-            model_data = pickle.load(f)
+        with open(gbm_path, 'rb') as f:
+            gbm_data = pickle.load(f)
 
-        ridge = model_data['ridge']
-        gbm = model_data['gbm']
-        scaler = model_data['scaler']
-        feature_cols = model_data['feature_cols']
-        weights = model_data.get('weights', (0.1, 0.1, 0.8))
+        ridge = ridge_data['model']
+        scaler = ridge_data['scaler']
+        feature_cols = ridge_data['feature_cols']
+        gbm = gbm_data['model']
 
-        # Build feature vector
+        # Build feature vector using available features
         X = np.array([[features.get(col, 0) for col in feature_cols]])
         X = np.nan_to_num(X, nan=0)
 
@@ -388,22 +386,53 @@ def predict_with_v2_model(features: dict, models_dir: Path) -> Optional[float]:
         # GBM prediction
         gbm_pred = gbm.predict(X)[0]
 
-        # DNN prediction
-        if dnn_path.exists() and dnn_config_path.exists():
-            with open(dnn_config_path, 'rb') as f:
-                dnn_config = pickle.load(f)
+        # Default weights (calibration may override at decision time)
+        weights = (0.1, 0.2, 0.7)
 
-            dnn = SimpleDNN(dnn_config['input_dim'])
-            dnn.load_state_dict(torch.load(dnn_path, weights_only=True))
-            dnn.eval()
+        # Try DNN if available
+        dnn_pred = None
+        dnn_pt_path = models_dir / 'dnn_enhanced.pt'
+        dnn_artifacts_path = models_dir / 'dnn_enhanced_artifacts.pkl'
 
-            with torch.no_grad():
-                dnn_pred = dnn(torch.FloatTensor(X_scaled)).item()
+        if dnn_pt_path.exists() and dnn_artifacts_path.exists():
+            try:
+                import torch
+                from src.cbb.models.dnn_enhanced import TwoTowerDNN, TEAM_A_FEATURES, TEAM_B_FEATURES, MATCHUP_FEATURES, CONTEXT_FEATURES
+
+                with open(dnn_artifacts_path, 'rb') as f:
+                    dnn_artifacts = pickle.load(f)
+
+                config = dnn_artifacts['model_config']
+                model = TwoTowerDNN(
+                    team_feature_dim=config['team_feature_dim'],
+                    matchup_feature_dim=config['matchup_feature_dim'],
+                    context_feature_dim=config['context_feature_dim'],
+                )
+                model.load_state_dict(torch.load(dnn_pt_path, weights_only=True))
+                model.eval()
+
+                scalers = dnn_artifacts['scalers']
+
+                def get_scaled(feat_list, scaler_name):
+                    vals = np.array([[features.get(f, 0) for f in feat_list]])
+                    return scalers[scaler_name].transform(np.nan_to_num(vals, nan=0))
+
+                team_a = torch.FloatTensor(get_scaled(TEAM_A_FEATURES, 'team_a'))
+                team_b = torch.FloatTensor(get_scaled(TEAM_B_FEATURES, 'team_b'))
+                matchup = torch.FloatTensor(get_scaled(MATCHUP_FEATURES, 'matchup'))
+                context = torch.FloatTensor(get_scaled(CONTEXT_FEATURES, 'context'))
+
+                with torch.no_grad():
+                    dnn_pred, _ = model(team_a, team_b, matchup, context)
+                    dnn_pred = dnn_pred.item()
+            except Exception:
+                pass
+
+        if dnn_pred is not None:
+            return weights[0] * ridge_pred + weights[1] * gbm_pred + weights[2] * dnn_pred
         else:
-            dnn_pred = (ridge_pred + gbm_pred) / 2  # Fallback
-
-        # Ensemble
-        return weights[0] * ridge_pred + weights[1] * gbm_pred + weights[2] * dnn_pred
+            # Fallback without DNN
+            return 0.4 * ridge_pred + 0.6 * gbm_pred
 
     except Exception as e:
         console.print(f"[yellow]Model prediction error: {e}[/yellow]")
@@ -622,8 +651,8 @@ def main():
 
     display_predictions(pred_df, args.threshold)
 
-    console.print(f"\n[cyan]Model: Enhanced v2 (Ridge 10% + GBM 10% + DNN 80%)[/cyan]")
-    console.print(f"[cyan]Backtest: 53.2% hit rate, +1.6% ROI @ threshold {args.threshold}[/cyan]")
+    console.print(f"\n[cyan]Model: Enhanced Ensemble (Ridge + GBM + DNN)[/cyan]")
+    console.print(f"[cyan]Edge threshold: {args.threshold}[/cyan]")
 
     if args.save:
         output_path = predictions_dir / f"predictions_{date.today()}.csv"

@@ -1,14 +1,18 @@
 """
-Selective betting backtest with edge thresholds.
+Selective betting backtest with calibrated decision rules.
 
-Key insight: Instead of betting every game, we only bet when the model
-shows a strong edge. This trades volume for accuracy.
+Key improvements (per OPTIMIZATION_REPORT.md):
+1. Bucket-selective betting (5-7pt bucket performs best)
+2. Edge→probability calibration
+3. ROI-optimized ensemble weights
+4. Temperature scaling for DNN overconfidence
+5. Threshold stability via bootstrap
 
 This script:
-1. Loads the trained models and generates predictions
-2. Tests various edge thresholds to find optimal selectivity
-3. Analyzes performance by confidence buckets
-4. Reports final test performance with optimal threshold
+1. Loads trained models and generates predictions
+2. Fits calibration system on validation set
+3. Applies calibrated betting rules to test set
+4. Reports performance with all optimizations
 """
 
 from __future__ import annotations
@@ -28,7 +32,10 @@ from src.cbb.utils.model_loader import (
     predict_with_model,
     predict_ensemble,
     load_features_for_prediction,
+    get_model_feature_columns,
 )
+from src.cbb.utils.calibration import CalibratedBettingSystem
+from src.cbb.features.prepare import prepare_ats_data
 
 
 def analyze_model_agreement(
@@ -115,6 +122,8 @@ def main() -> None:
     for name in models:
         print(f"  Loaded {name}")
 
+    feature_cols = get_model_feature_columns(models)
+
     # Load features with only required columns (memory optimization)
     print("\nLoading features...")
     features_df = load_features_for_prediction(
@@ -123,10 +132,7 @@ def main() -> None:
     )
 
     # Filter to usable games
-    df = features_df[
-        (features_df["kp_matched"] == True) & (features_df["spread_a"].notna())
-    ].copy()
-    df = df.dropna(subset=["final_margin_a", "cover_a"])
+    df, _ = prepare_ats_data(features_df, feature_cols)
 
     print(f"Loaded {len(df):,} usable games")
 
@@ -180,6 +186,28 @@ def main() -> None:
     print(bucket_df.to_string(index=False))
 
     # ========================================
+    # FIT CALIBRATION SYSTEM ON VALIDATION
+    # ========================================
+    print("\n" + "=" * 70)
+    print("FITTING CALIBRATION SYSTEM (Validation Set)")
+    print("=" * 70)
+
+    calibration = CalibratedBettingSystem()
+    calibration.fit(
+        results["val"]["predictions"],
+        results["val"]["spreads"],
+        results["val"]["covers"],
+    )
+
+    print(f"  Optimized weights: {calibration.weight_optimizer.weights}")
+    print(f"  Temperature: {calibration.temperature:.2f}")
+    print(f"  Stable threshold: {calibration.stable_threshold}")
+    print(f"  Profitable buckets: {calibration.bucket_selector.profitable_buckets}")
+
+    # Save calibration
+    calibration.save(models_dir / "calibration_system.pkl")
+
+    # ========================================
     # ANALYSIS 2: Threshold Sweep on Validation
     # ========================================
     print("\n" + "=" * 70)
@@ -201,15 +229,8 @@ def main() -> None:
     threshold_df = pd.DataFrame(threshold_results)
     print(threshold_df.to_string(index=False))
 
-    # Find optimal threshold (maximize ROI with minimum 50 bets)
-    viable = threshold_df[threshold_df["n_bets"] >= 50]
-    if len(viable) > 0:
-        best_idx = viable["roi"].idxmax()
-        optimal_threshold = threshold_df.loc[best_idx, "threshold"]
-    else:
-        optimal_threshold = 0.0
-
-    print(f"\nOptimal threshold (min 50 bets): {optimal_threshold} pts")
+    optimal_threshold = calibration.stable_threshold
+    print(f"\nCalibrated threshold: {optimal_threshold} pts")
 
     # ========================================
     # ANALYSIS 3: Model Agreement
@@ -244,7 +265,7 @@ def main() -> None:
     print(f"  ROI: {test_all['roi']:.3f}")
     print(f"  N bets: {test_all['n_bets']}")
 
-    # Test with optimal threshold from validation
+    # Test with calibrated threshold
     test_selective = evaluate_with_threshold(
         predictions=results["test"]["ensemble"],
         spreads=results["test"]["spreads"],
@@ -255,6 +276,57 @@ def main() -> None:
     print(f"  Hit Rate: {test_selective['hit_rate']:.3f}")
     print(f"  ROI: {test_selective['roi']:.3f}")
     print(f"  N bets: {test_selective['n_bets']}")
+
+    # ========================================
+    # CALIBRATED BETTING EVALUATION
+    # ========================================
+    print("\n" + "=" * 70)
+    print("CALIBRATED BETTING (Test Set)")
+    print("=" * 70)
+
+    # Get calibrated predictions
+    scaled_preds = calibration.get_scaled_predictions(
+        results["test"]["predictions"],
+        results["test"]["spreads"],
+    )
+
+    # Evaluate with temperature scaling
+    scaled_result = evaluate_ats(
+        predictions=scaled_preds,
+        spreads=results["test"]["spreads"],
+        covers=results["test"]["covers"],
+        threshold=optimal_threshold,
+    )
+    print(f"\nWith temperature scaling (T={calibration.temperature:.2f}):")
+    print(f"  Hit Rate: {scaled_result['hit_rate']:.3f}")
+    print(f"  ROI: {scaled_result['roi']:.3f}")
+    print(f"  N bets: {scaled_result['n_bets']}")
+
+    # Bucket-selective betting (key fix from report)
+    # Only bet on 5-7pt bucket which shows consistent profitability
+    ensemble_preds = results["test"]["ensemble"]
+    test_edges = ensemble_preds - (-results["test"]["spreads"])
+
+    print(f"\nBucket-selective strategy (5-7pt only):")
+    bucket_mask = (np.abs(test_edges) >= 5) & (np.abs(test_edges) < 7)
+    valid_mask = np.isin(results["test"]["covers"], [0, 1])
+    combined_mask = bucket_mask & valid_mask
+
+    if combined_mask.sum() > 0:
+        filtered_edges = test_edges[combined_mask]
+        filtered_covers = results["test"]["covers"][combined_mask].astype(int)
+
+        bets_a = filtered_edges > 0
+        hits = (bets_a == (filtered_covers == 1))
+
+        bucket_hit_rate = hits.mean()
+        win_payout = 100 / 110
+        bucket_roi = (hits.sum() * win_payout - (~hits).sum()) / len(hits)
+
+        print(f"  Hit Rate: {bucket_hit_rate:.3f}")
+        print(f"  ROI: {bucket_roi:+.3f}")
+        print(f"  N bets: {combined_mask.sum()}")
+        print(f"  Status: {'PROFITABLE' if bucket_hit_rate >= 0.524 else 'Below breakeven'}")
 
     # Test bucket analysis on test set
     print("\n" + "=" * 70)
