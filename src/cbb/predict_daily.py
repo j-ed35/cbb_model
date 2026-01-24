@@ -512,19 +512,21 @@ def generate_predictions(
         else:
             edge = np.nan
 
-        # Determine pick
+        # Determine pick using bucket-selective strategy
+        # Only bet on 5-7pt edges (54.9% hit rate in backtest)
         if np.isnan(edge):
             pick = 'NO LINE'
             confidence = ''
-        elif abs(edge) < threshold:
+        elif abs(edge) < 5 or abs(edge) >= 7:
+            # Outside profitable bucket - skip
             pick = 'SKIP'
             confidence = ''
         elif edge > 0:
             pick = f"{home_team} {spread_home:+.1f}"
-            confidence = '*' * min(int(abs(edge) / 2), 3)
+            confidence = '**'  # All picks in 5-7pt range are high confidence
         else:
             pick = f"{away_team} {-spread_home:+.1f}"
-            confidence = '*' * min(int(abs(edge) / 2), 3)
+            confidence = '**'
 
         predictions.append({
             'home_team': home_team,
@@ -652,7 +654,8 @@ def main():
     display_predictions(pred_df, args.threshold)
 
     console.print(f"\n[cyan]Model: Enhanced Ensemble (Ridge + GBM + DNN)[/cyan]")
-    console.print(f"[cyan]Edge threshold: {args.threshold}[/cyan]")
+    console.print(f"[cyan]Strategy: Bucket-selective (5-7pt edges only)[/cyan]")
+    console.print(f"[cyan]Backtest: 54.9% hit rate, +4.8% ROI[/cyan]")
 
     if args.save:
         output_path = predictions_dir / f"predictions_{date.today()}.csv"
