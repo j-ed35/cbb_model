@@ -1,11 +1,14 @@
 name: Daily Picks
 
+# NOTE: KenPom uses Cloudflare which blocks cloud/datacenter IPs.
+# Cron schedule is disabled until a workaround is found.
+# For now, run ./update_picks.sh locally to generate and push picks.
+
 on:
-  schedule:
-    # Run at 9:00 AM and 3:00 PM Eastern (14:00 and 20:00 UTC)
-    - cron: "0 14 * * *"
-    - cron: "0 20 * * *"
-  workflow_dispatch: # Allow manual trigger
+  # schedule:
+  #   - cron: "0 14 * * *"
+  #   - cron: "0 20 * * *"
+  workflow_dispatch: # Manual trigger only
 
 permissions:
   contents: write
