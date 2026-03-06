@@ -29,10 +29,14 @@ dist/
 # Project data
 data/processed/
 data/features/
-reports/
+reports/*
+!reports/models/
+reports/models/*
+!reports/models/gbm.pkl
 
 HANDOFF.MD
 
 .claude
 
 OPTIMIZATION_REPORT.md
+.vercel

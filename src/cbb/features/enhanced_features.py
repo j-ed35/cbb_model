@@ -234,6 +234,103 @@ def compute_recency_weighted_stats_vectorized(
     return df
 
 
+def compute_line_movement_features(
+    games_df: pd.DataFrame,
+    opening_spreads: Optional[pd.DataFrame] = None,
+    closing_spreads: Optional[pd.DataFrame] = None,
+    public_betting: Optional[pd.DataFrame] = None,
+) -> pd.DataFrame:
+    """
+    Compute line movement and market-derived features.
+
+    This implements PDF improvement #1: "Augment feature set with line movement data"
+
+    Features added (when data available):
+    - opening_spread_a: Opening spread for team A
+    - spread_movement: Current spread - Opening spread (positive = line moved in team A's favor)
+    - spread_movement_pct: Movement as percentage of spread
+    - public_pct_a: Public betting percentage on team A (contrarian indicator)
+    - sharp_vs_public: Indicator of sharp money movement
+
+    Line movement reflects market information and creates opportunities.
+    Public betting percentages enable contrarian strategies.
+
+    Args:
+        games_df: Games DataFrame with 'spread_a' column (current spread)
+        opening_spreads: Optional DataFrame with 'game_key' and 'opening_spread_a'
+        closing_spreads: Optional DataFrame with 'game_key' and 'closing_spread_a'
+        public_betting: Optional DataFrame with 'game_key' and 'public_pct_a'
+
+    Returns:
+        DataFrame with additional market features
+    """
+    df = games_df.copy()
+
+    # Initialize features with defaults
+    df['opening_spread_a'] = df['spread_a']  # Default to current if no opening data
+    df['spread_movement'] = 0.0
+    df['spread_movement_pct'] = 0.0
+    df['public_pct_a'] = 0.5  # Neutral default
+    df['sharp_indicator'] = 0  # 0 = no signal, 1 = sharp favors A, -1 = sharp favors B
+
+    # Merge opening spreads if available
+    if opening_spreads is not None and len(opening_spreads) > 0:
+        df = df.merge(
+            opening_spreads[['game_key', 'opening_spread_a']],
+            on='game_key',
+            how='left',
+            suffixes=('', '_opening'),
+        )
+        # Update with merged values where available
+        if 'opening_spread_a_opening' in df.columns:
+            df['opening_spread_a'] = df['opening_spread_a_opening'].fillna(df['spread_a'])
+            df = df.drop(columns=['opening_spread_a_opening'])
+
+        # Compute line movement
+        # Positive movement = line moved in Team A's favor (spread became more negative/favorable)
+        df['spread_movement'] = df['opening_spread_a'] - df['spread_a']
+        df['spread_movement_pct'] = df['spread_movement'] / (df['spread_a'].abs() + 0.5).clip(lower=1)
+
+    # Merge closing spreads if available
+    if closing_spreads is not None and len(closing_spreads) > 0:
+        df = df.merge(
+            closing_spreads[['game_key', 'closing_spread_a']],
+            on='game_key',
+            how='left',
+        )
+        if 'closing_spread_a' in df.columns:
+            # Compute CLV (closing line value) feature
+            df['clv_a'] = df['spread_a'] - df['closing_spread_a'].fillna(df['spread_a'])
+            df['clv_a'] = df['clv_a'].fillna(0)
+
+    # Merge public betting data if available
+    if public_betting is not None and len(public_betting) > 0:
+        df = df.merge(
+            public_betting[['game_key', 'public_pct_a']],
+            on='game_key',
+            how='left',
+        )
+        if 'public_pct_a' in df.columns:
+            df['public_pct_a'] = df['public_pct_a'].fillna(0.5)
+
+            # Contrarian indicator: 1 if betting against public (>65% on other side)
+            df['contrarian_a'] = (df['public_pct_a'] < 0.35).astype(int)
+            df['contrarian_b'] = (df['public_pct_a'] > 0.65).astype(int)
+
+            # Sharp money indicator
+            # If line moves opposite to public money, suggests sharp action
+            # e.g., Public on A but line moves against A -> sharp money on B
+            line_favors_a = df['spread_movement'] > 0
+            public_on_a = df['public_pct_a'] > 0.5
+
+            df['sharp_indicator'] = np.where(
+                line_favors_a & ~public_on_a, 1,  # Line favors A but public on B
+                np.where(~line_favors_a & public_on_a, -1, 0)  # Line favors B but public on A
+            )
+
+    return df
+
+
 def merge_kenpom_features_vectorized(
     games_df: pd.DataFrame,
     kenpom_df: pd.DataFrame,
@@ -356,6 +453,9 @@ def build_enhanced_features(
     games_df: pd.DataFrame,
     kenpom_df: pd.DataFrame,
     team_map: dict[str, str],
+    opening_spreads: Optional[pd.DataFrame] = None,
+    closing_spreads: Optional[pd.DataFrame] = None,
+    public_betting: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """
     Build comprehensive feature set for ATS prediction.
@@ -366,8 +466,17 @@ def build_enhanced_features(
     3. Rolling ATS record
     4. Recency-weighted performance stats
     5. Context features (home/neutral)
+    6. Line movement features (PDF improvement #1) - when data available
 
     Uses vectorized operations for efficiency.
+
+    Args:
+        games_df: Base games DataFrame
+        kenpom_df: KenPom snapshots DataFrame
+        team_map: Team name mapping dict
+        opening_spreads: Optional opening lines data
+        closing_spreads: Optional closing lines data
+        public_betting: Optional public betting percentages
     """
     print("Computing rest days (vectorized)...")
     df = compute_rest_days_vectorized(games_df)
@@ -380,6 +489,11 @@ def build_enhanced_features(
 
     print("Merging KenPom features (vectorized)...")
     df = merge_kenpom_features_vectorized(df, kenpom_df, team_map)
+
+    # PDF improvement #1: Line movement features
+    if opening_spreads is not None or public_betting is not None:
+        print("Computing line movement features...")
+        df = compute_line_movement_features(df, opening_spreads, closing_spreads, public_betting)
 
     # Add context features
     df["is_home_a"] = (~df["is_neutral"]).astype(int)
@@ -410,8 +524,16 @@ def build_enhanced_features(
     rolling_cols = ["rolling_ats_a", "rolling_ats_b", "rolling_ats_diff"]
     ew_cols = ["ew_margin_a", "ew_margin_b", "ew_ppg_a", "ew_ppg_b", "ew_margin_diff"]
 
+    # PDF improvement #1: Line movement and market features
+    market_cols = [
+        "opening_spread_a", "spread_movement", "spread_movement_pct",
+        "public_pct_a", "contrarian_a", "contrarian_b", "sharp_indicator",
+        "closing_spread_a", "clv_a",
+    ]
+    market_cols = [c for c in market_cols if c in df.columns]
+
     # Ensure all columns exist
-    all_cols = core_cols + kenpom_cols + rest_cols + rolling_cols + ew_cols
+    all_cols = core_cols + kenpom_cols + rest_cols + rolling_cols + ew_cols + market_cols
     available_cols = [c for c in all_cols if c in df.columns]
 
     # Add any extra columns not in our list

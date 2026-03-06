@@ -1,0 +1,43 @@
+name: Daily Picks
+
+on:
+  schedule:
+    # Run at 9:00 AM and 3:00 PM Eastern (14:00 and 20:00 UTC)
+    - cron: "0 14 * * *"
+    - cron: "0 20 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  generate-picks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install kenpompy numpy pandas requests scikit-learn beautifulsoup4 html5lib lxml rich
+
+      - name: Generate predictions
+        env:
+          KENPOM_EMAIL: ${{ secrets.KENPOM_EMAIL }}
+          KENPOM_PW: ${{ secrets.KENPOM_PW }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          python -m src.cbb.predict_daily --json --save
+
+      - name: Commit and push picks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/picks.json
+          git diff --staged --quiet || git commit -m "Update daily picks $(date -u +%Y-%m-%d)"
+          git push

@@ -1,342 +1,215 @@
 """
-Generate static HTML page for CBB picks.
+Generate static HTML picks page (fallback for local/offline use).
 
-Creates a Web 1.0 style HTML table with today's picks
-and historical performance tracking.
+The primary picks page (docs/picks.html) fetches from the Vercel API.
+This generates a self-contained static version with embedded data.
 
 Usage:
     python -m src.cbb.generate_html [--date YYYY-MM-DD]
-
-Output:
-    docs/picks.html - Daily picks page for GitHub Pages
 """
 
-import pandas as pd
+import json
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, date
-import argparse
 from typing import Optional
-import glob
 
+import pandas as pd
 
-def load_predictions(predictions_dir: Path, target_date: Optional[str] = None) -> tuple[pd.DataFrame, str]:
-    """Load predictions for a specific date or the most recent."""
-    if target_date:
-        pred_file = predictions_dir / f"predictions_{target_date}.csv"
-        if not pred_file.exists():
-            raise FileNotFoundError(f"No predictions found for {target_date}")
-        return pd.read_csv(pred_file), target_date
-
-    # Find most recent
-    files = sorted(predictions_dir.glob("predictions_*.csv"), reverse=True)
-    if not files:
-        raise FileNotFoundError("No prediction files found")
-
-    latest = files[0]
-    date_str = latest.stem.replace("predictions_", "")
-    return pd.read_csv(latest), date_str
-
-
-def load_historical_predictions(predictions_dir: Path, limit: int = 7) -> list[tuple[str, pd.DataFrame]]:
-    """Load historical predictions for the past N days."""
-    files = sorted(predictions_dir.glob("predictions_*.csv"), reverse=True)
-
-    historical = []
-    for f in files[:limit]:
-        date_str = f.stem.replace("predictions_", "")
-        df = pd.read_csv(f)
-        historical.append((date_str, df))
-
-    return historical
-
-
-def generate_picks_table(df: pd.DataFrame, threshold: float = 4.5) -> str:
-    """Generate HTML table for actionable picks."""
-    # Filter to actionable picks only
-    df = df.copy()
-    df['edge'] = pd.to_numeric(df['edge'], errors='coerce')
-    if 'is_actionable' in df.columns:
-        actionable = df[df['is_actionable'] == True].copy()
-    else:
-        actionable = df[df['edge'].abs() >= threshold].copy()
-
-    if len(actionable) == 0:
-        if 'is_actionable' in df.columns:
-            return "<p>No model-selected picks today</p>"
-        return "<p>No actionable picks today (edge threshold: {:.1f} pts)</p>".format(threshold)
-
-    # Sort by absolute edge descending
-    actionable['abs_edge'] = actionable['edge'].abs()
-    actionable = actionable.sort_values('abs_edge', ascending=False)
-
-    rows = []
-    for _, row in actionable.iterrows():
-        edge = row['edge']
-        pick = row['pick']
-        spread = row.get('spread_home', '')
-        pred_margin = row.get('pred_margin', '')
-
-        # Determine confidence stars (text-based for Web 1.0)
-        stars = '*' * min(int(abs(edge) / 2), 3) if pd.notna(edge) else ''
-
-        # Format values
-        edge_str = f"{edge:+.1f}" if pd.notna(edge) else "N/A"
-        margin_str = f"{pred_margin:.1f}" if pd.notna(pred_margin) else "N/A"
-        spread_str = f"{spread:+.1f}" if pd.notna(spread) else "N/A"
-
-        away = row.get('away_team', '')
-        home = row.get('home_team', '')
-
-        rows.append(f"""    <tr>
-      <td>{away}</td>
-      <td>@</td>
-      <td>{home}</td>
-      <td align="right">{spread_str}</td>
-      <td align="right">{margin_str}</td>
-      <td align="right"><b>{edge_str}</b></td>
-      <td><b>{pick}</b></td>
-      <td>{stars}</td>
-    </tr>""")
-
-    return """<table border="1" cellpadding="5" cellspacing="0">
-  <thead>
-    <tr>
-      <th>Away</th>
-      <th></th>
-      <th>Home</th>
-      <th>Spread</th>
-      <th>Pred</th>
-      <th>Edge</th>
-      <th>Pick</th>
-      <th>Conf</th>
-    </tr>
-  </thead>
-  <tbody>
-""" + "\n".join(rows) + """
-  </tbody>
-</table>"""
-
-
-def generate_all_games_table(df: pd.DataFrame) -> str:
-    """Generate HTML table showing all games."""
-    df = df.copy()
-    df['edge'] = pd.to_numeric(df['edge'], errors='coerce')
-
-    rows = []
-    for _, row in df.iterrows():
-        edge = row['edge']
-        pick = row['pick']
-        spread = row.get('spread_home', '')
-        pred_margin = row.get('pred_margin', '')
-
-        # Format values
-        edge_str = f"{edge:+.1f}" if pd.notna(edge) else "N/A"
-        margin_str = f"{pred_margin:.1f}" if pd.notna(pred_margin) else "N/A"
-        spread_str = f"{spread:+.1f}" if pd.notna(spread) else "N/A"
-
-        away = row.get('away_team', '')
-        home = row.get('home_team', '')
-
-        # Highlight actionable picks
-        is_actionable = False
-        if 'is_actionable' in row:
-            is_actionable = bool(row.get('is_actionable', False))
-        elif pd.notna(edge) and abs(edge) >= 4.5:
-            is_actionable = True
-
-        if is_actionable:
-            style = ' style="background-color: #ffffcc;"'
-        else:
-            style = ''
-
-        rows.append(f"""    <tr{style}>
-      <td>{away}</td>
-      <td>@</td>
-      <td>{home}</td>
-      <td align="right">{spread_str}</td>
-      <td align="right">{margin_str}</td>
-      <td align="right">{edge_str}</td>
-      <td>{pick}</td>
-    </tr>""")
-
-    return """<table border="1" cellpadding="4" cellspacing="0" style="font-size: 12px;">
-  <thead>
-    <tr>
-      <th>Away</th>
-      <th></th>
-      <th>Home</th>
-      <th>Spread</th>
-      <th>Pred</th>
-      <th>Edge</th>
-      <th>Pick</th>
-    </tr>
-  </thead>
-  <tbody>
-""" + "\n".join(rows) + """
-  </tbody>
-</table>"""
+from src.cbb.utils.espn_ids import get_logo_url, get_abbrev
 
 
 def generate_html_page(
     pred_df: pd.DataFrame,
     pred_date: str,
     output_path: Path,
-    threshold: float = 4.5
+    threshold: float = 4.5,
 ) -> None:
-    """Generate the complete HTML page."""
+    """Generate a static HTML page with embedded prediction data."""
 
-    # Count stats
-    total_games = len(pred_df)
-    pred_df['edge'] = pd.to_numeric(pred_df['edge'], errors='coerce')
-    if 'is_actionable' in pred_df.columns:
-        actionable = pred_df[pred_df['is_actionable'] == True]
-        selection_summary = "model-selected picks"
-        selection_detail = "Selection: calibrated filter trained on historical data"
-        picks_intro = "Only showing model-selected picks. Sorted by edge strength."
-    else:
-        actionable = pred_df[pred_df['edge'].abs() >= threshold]
-        selection_summary = f"picks with edge >= {threshold} pts"
-        selection_detail = "Selection: edge threshold"
-        picks_intro = f"Only showing games with edge >= {threshold} points. Sorted by edge strength."
-    num_picks = len(actionable)
+    games = []
+    for _, row in pred_df.iterrows():
+        edge = row.get("edge")
+        if pd.isna(edge) or abs(edge) < threshold:
+            continue
 
-    picks_table = generate_picks_table(pred_df, threshold)
-    all_games_table = generate_all_games_table(pred_df)
+        spread = row.get("spread_home")
+        if edge > 0:
+            pick_team = row["home_team"]
+            pick_spread = f"{spread:+.1f}" if pd.notna(spread) else ""
+        else:
+            pick_team = row["away_team"]
+            pick_spread = f"{-spread:+.1f}" if pd.notna(spread) else ""
+
+        games.append({
+            "home_team": row["home_team"],
+            "away_team": row["away_team"],
+            "home_abbrev": get_abbrev(row["home_team"]),
+            "away_abbrev": get_abbrev(row["away_team"]),
+            "home_logo": get_logo_url(row["home_team"]),
+            "away_logo": get_logo_url(row["away_team"]),
+            "commence_time": row.get("commence_time", ""),
+            "spread_home": float(spread) if pd.notna(spread) else None,
+            "total": float(row["total"]) if pd.notna(row.get("total")) else None,
+            "pred_margin": round(float(row["pred_margin"]), 1),
+            "edge": round(float(edge), 1),
+            "pick_team": pick_team,
+            "pick_abbrev": get_abbrev(pick_team),
+            "pick_spread": pick_spread,
+            "pick_logo": get_logo_url(pick_team),
+        })
+
+    games.sort(key=lambda g: abs(g["edge"]), reverse=True)
+
+    data = {
+        "date": pred_date,
+        "generated": datetime.now().isoformat(),
+        "threshold": threshold,
+        "total_games": len(pred_df),
+        "picks_count": len(games),
+        "games": games,
+    }
+
+    data_json = json.dumps(data)
 
     html = f"""<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CBB ATS Picks - {pred_date}</title>
+  <title>CBB Model Picks - {pred_date}</title>
   <style>
+    * {{ margin: 0; padding: 0; box-sizing: border-box; }}
     body {{
-      font-family: Georgia, "Times New Roman", serif;
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 0 15px;
-      background-color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5; color: #333;
     }}
-    h1 {{
-      color: #333;
-      border-bottom: 2px solid #333;
-      padding-bottom: 10px;
+    .header {{ background: #1a1a2e; color: white; padding: 20px 0; text-align: center; }}
+    .header h1 {{ font-size: 24px; font-weight: 700; letter-spacing: 1px; }}
+    .header .subtitle {{ font-size: 13px; color: #8899aa; margin-top: 4px; }}
+    .container {{ max-width: 900px; margin: 0 auto; padding: 16px; }}
+    .summary-bar {{
+      display: flex; justify-content: space-between; align-items: center;
+      background: white; border-radius: 8px; padding: 12px 20px;
+      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-size: 14px;
     }}
-    h2 {{
-      color: #555;
-      margin-top: 30px;
+    .summary-bar .count {{ font-weight: 700; color: #1a1a2e; }}
+    .summary-bar .date {{ color: #666; }}
+    .table-header {{
+      display: grid; grid-template-columns: 1fr 200px 220px;
+      background: #e8ecf0; border-radius: 8px 8px 0 0;
+      padding: 10px 16px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: #667;
     }}
-    table {{
-      border-collapse: collapse;
-      width: 100%;
-      background-color: white;
+    .table-header .col-odds {{ text-align: center; }}
+    .table-header .col-pick {{ text-align: center; }}
+    .game-card {{
+      display: grid; grid-template-columns: 1fr 200px 220px;
+      background: white; border-bottom: 1px solid #e8ecf0;
+      padding: 12px 16px; align-items: center;
     }}
-    th {{
-      background-color: #333;
-      color: white;
-      padding: 8px;
-      text-align: left;
+    .game-card:last-child {{ border-radius: 0 0 8px 8px; border-bottom: none; }}
+    .game-card:hover {{ background: #f8f9fa; }}
+    .game-info {{ display: flex; flex-direction: column; gap: 6px; }}
+    .team-row {{ display: flex; align-items: center; gap: 10px; }}
+    .team-logo {{ width: 32px; height: 32px; border-radius: 4px; object-fit: contain; background: #f5f5f5; }}
+    .team-name {{ font-size: 15px; font-weight: 600; }}
+    .game-time {{ font-size: 12px; color: #888; margin-left: 42px; }}
+    .odds-col {{ display: flex; flex-direction: column; align-items: center; gap: 4px; }}
+    .odds-total, .odds-spread {{
+      font-size: 14px; font-weight: 600; color: #444;
+      background: #f0f2f5; border-radius: 4px; padding: 2px 10px; min-width: 70px; text-align: center;
     }}
-    td {{
-      padding: 6px 8px;
-      border-bottom: 1px solid #ddd;
+    .pick-col {{
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #f0f7ff; border-radius: 8px; padding: 8px 12px; border: 2px solid #c4ddff;
     }}
-    tr:hover {{
-      background-color: #f0f0f0;
-    }}
-    .summary {{
-      background-color: #e8e8e8;
-      padding: 15px;
-      margin: 20px 0;
-      border-left: 4px solid #333;
-    }}
-    .model-info {{
-      font-size: 12px;
-      color: #666;
-      margin-top: 30px;
-      padding: 10px;
-      background-color: #e8e8e8;
-    }}
-    .updated {{
-      font-size: 11px;
-      color: #888;
-    }}
-    hr {{
-      border: none;
-      border-top: 1px solid #ccc;
-      margin: 30px 0;
+    .pick-col.strong {{ background: #e8f5e8; border-color: #86d486; }}
+    .pick-logo {{ width: 28px; height: 28px; object-fit: contain; }}
+    .pick-text {{ font-size: 16px; font-weight: 700; color: #1a1a2e; }}
+    .no-picks {{ text-align: center; padding: 40px; color: #888; font-size: 16px; }}
+    .footer {{ text-align: center; padding: 24px; font-size: 12px; color: #999; }}
+    @media (max-width: 700px) {{
+      .table-header, .game-card {{ grid-template-columns: 1fr 100px 140px; }}
+      .team-name {{ max-width: 120px; font-size: 13px; }}
+      .pick-text {{ font-size: 13px; }}
     }}
   </style>
 </head>
 <body>
-  <h1>CBB ATS Picks</h1>
-  <p class="updated">Predictions for: <b>{pred_date}</b> | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}</p>
-
-  <div class="summary">
-    <b>Summary:</b> {num_picks} {selection_summary} from {total_games} games<br>
-    <b>Model:</b> Ridge + GBM + DNN ensemble | {selection_detail}
+  <div class="header">
+    <h1>CBB MODEL PICKS</h1>
+    <div class="subtitle">Against the Spread</div>
   </div>
-
-  <h2>Today's Picks</h2>
-  <p>{picks_intro}</p>
-  {picks_table}
-
-  <hr>
-
-  <h2>All Games</h2>
-  <p>Full game list. Yellow = actionable pick.</p>
-  {all_games_table}
-
-  <div class="model-info">
-    <b>How to read:</b><br>
-    - <b>Spread:</b> Vegas line (+ means home team is underdog)<br>
-    - <b>Pred:</b> Model's predicted margin (home team perspective)<br>
-    - <b>Edge:</b> Pred minus implied spread. Positive = bet home cover, Negative = bet away cover<br>
-    - <b>Conf:</b> More stars = larger model edge<br>
-    <br>
-    <b>Betting strategy:</b> Picks are filtered using the model's historical calibration rules.
+  <div class="container">
+    <div class="summary-bar">
+      <span class="count" id="summary-count"></span>
+      <span class="date" id="summary-date"></span>
+    </div>
+    <div class="table-header">
+      <div>Game Info</div>
+      <div class="col-odds">Current Odds</div>
+      <div class="col-pick">Model Pick</div>
+    </div>
+    <div id="games-container"></div>
   </div>
+  <div class="footer">
+    Model: GBM trained on KenPom ratings (2022-2026) | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}
+  </div>
+  <script>
+    const DATA = {data_json};
 
-  <p class="updated">
-    <br>
-    Source: KenPom ratings + The Odds API spreads<br>
-    Model trained on 10,830 games (2022-2026 seasons)
-  </p>
+    function fallbackLogo(img) {{ img.style.display = 'none'; }}
+
+    function formatTime(isoStr) {{
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      return d.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit' }});
+    }}
+
+    document.getElementById('summary-date').textContent = DATA.date;
+    document.getElementById('summary-count').textContent =
+      DATA.picks_count + ' picks from ' + DATA.total_games + ' games';
+
+    const container = document.getElementById('games-container');
+    if (!DATA.games.length) {{
+      container.innerHTML = '<div class="no-picks">No model picks today.</div>';
+    }} else {{
+      let html = '';
+      for (const g of DATA.games) {{
+        const isStrong = Math.abs(g.edge) >= 7;
+        const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
+        const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? '+' + g.spread_home : '' + g.spread_home) : '';
+        const totalStr = g.total != null ? 'o' + g.total : '';
+        html += `
+          <div class="game-card">
+            <div class="game-info">
+              <div class="team-row">
+                <img class="team-logo" src="${{g.away_logo}}" alt="" onerror="fallbackLogo(this)">
+                <span class="team-name">${{g.away_team.toUpperCase()}}</span>
+              </div>
+              <div class="team-row">
+                <img class="team-logo" src="${{g.home_logo}}" alt="" onerror="fallbackLogo(this)">
+                <span class="team-name">${{g.home_team.toUpperCase()}}</span>
+              </div>
+              <div class="game-time">${{formatTime(g.commence_time)}}</div>
+            </div>
+            <div class="odds-col">
+              ${{totalStr ? `<div class="odds-total">${{totalStr}}</div>` : ''}}
+              ${{spreadStr ? `<div class="odds-spread">${{spreadStr}}</div>` : ''}}
+            </div>
+            <div class="${{pickClass}}">
+              <img class="pick-logo" src="${{g.pick_logo}}" alt="" onerror="fallbackLogo(this)">
+              <span class="pick-text">${{g.pick_abbrev}} ${{g.pick_spread}}</span>
+            </div>
+          </div>`;
+      }}
+      container.innerHTML = html;
+    }}
+  </script>
 </body>
-</html>
-"""
+</html>"""
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         f.write(html)
-
     print(f"Generated: {output_path}")
-
-
-def main():
-    parser = argparse.ArgumentParser(description='Generate HTML picks page')
-    parser.add_argument('--date', type=str, help='Date for predictions (YYYY-MM-DD)')
-    parser.add_argument('--threshold', type=float, default=4.5, help='Edge threshold')
-    args = parser.parse_args()
-
-    project_root = Path(__file__).parent.parent.parent
-    predictions_dir = project_root / 'reports' / 'predictions'
-    docs_dir = project_root / 'docs'
-
-    # Load predictions
-    try:
-        pred_df, pred_date = load_predictions(predictions_dir, args.date)
-        print(f"Loaded predictions for {pred_date}")
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        return
-
-    # Generate HTML
-    output_path = docs_dir / 'picks.html'
-    generate_html_page(pred_df, pred_date, output_path, args.threshold)
-
-    print(f"\nDone! Open {output_path} in a browser or push to GitHub Pages.")
-
-
-if __name__ == '__main__':
-    main()

@@ -1,0 +1,9 @@
+uv.lock
+pyproject.toml
+data/
+notebooks/
+tests/
+docs/
+*.parquet
+src/cbb/models/
+src/cbb/features/
