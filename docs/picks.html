@@ -23,11 +23,35 @@
     .summary-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: white; border-radius: 8px; padding: 12px 20px;
-      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      font-size: 14px;
+      margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-size: 14px; flex-wrap: wrap; gap: 8px;
     }
     .summary-bar .count { font-weight: 700; color: #1a1a2e; }
     .summary-bar .date { color: #666; }
+
+    /* Controls bar */
+    .controls-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: white; border-radius: 8px; padding: 10px 20px;
+      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-size: 13px; flex-wrap: wrap; gap: 8px;
+    }
+    .sort-controls { display: flex; align-items: center; gap: 6px; }
+    .sort-controls label { color: #666; font-weight: 600; }
+    .sort-btn {
+      background: #f0f2f5; border: 1px solid #ddd; border-radius: 6px;
+      padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; color: #555;
+    }
+    .sort-btn:hover { background: #e4e7eb; }
+    .sort-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .legend { display: flex; align-items: center; gap: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666; }
+    .legend-swatch {
+      width: 14px; height: 14px; border-radius: 3px; border: 2px solid;
+    }
+    .legend-swatch.regular { background: #f0f7ff; border-color: #c4ddff; }
+    .legend-swatch.strong { background: #e8f5e8; border-color: #86d486; }
 
     /* Date group header */
     .date-header {
@@ -73,7 +97,6 @@
       transition: background 0.15s;
       cursor: pointer;
     }
-    .game-card:last-of-type { border-bottom: none; }
     .game-card:hover { background: #f8f9fa; }
     .game-card.expanded { background: #f0f4ff; border-bottom: none; }
 
@@ -90,8 +113,6 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       max-width: 220px;
     }
-    .team-score { font-size: 15px; font-weight: 700; margin-left: auto; min-width: 30px; text-align: right; }
-    .team-score.winner { color: #16a34a; }
     .game-time { font-size: 12px; color: #888; margin-left: 42px; }
 
     /* Odds column */
@@ -146,7 +167,7 @@
     .detail-loading {
       text-align: center; padding: 20px; color: #888; font-size: 13px;
     }
-    .detail-loading .spinner {
+    .detail-loading .mini-spinner {
       display: inline-block; width: 20px; height: 20px;
       border: 2px solid #ddd; border-top-color: #1a1a2e;
       border-radius: 50%; animation: spin 0.8s linear infinite;
@@ -257,6 +278,8 @@
       .roster-grid { grid-template-columns: 1fr; }
       .kp-table { font-size: 12px; }
       .kp-table th, .kp-table td { padding: 6px 8px; }
+      .controls-bar { padding: 8px 12px; }
+      .legend { display: none; }
     }
   </style>
 </head>
@@ -270,6 +293,24 @@
     <div class="summary-bar">
       <span class="count" id="summary-count">Loading...</span>
       <span class="date" id="summary-date"></span>
+    </div>
+
+    <div class="controls-bar">
+      <div class="sort-controls">
+        <label>Sort:</label>
+        <button class="sort-btn active" data-sort="edge" onclick="setSort('edge')">Best Edge</button>
+        <button class="sort-btn" data-sort="time" onclick="setSort('time')">Game Time</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-swatch regular"></span>
+          <span>Pick (edge 4.5-7)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-swatch strong"></span>
+          <span>Strong Pick (edge 7+)</span>
+        </div>
+      </div>
     </div>
 
     <div id="games-container">
@@ -287,8 +328,14 @@
   <script>
     const API_URL = './data/picks.json';
 
-    // ─── ESPN API cache ───
+    // ─── State ───
+    let picksData = null;
+    let currentSort = 'edge';
+    let currentExpanded = null;
+    const detailCache = {};  // idx -> html string
     const espnCache = {};
+
+    // ─── ESPN API ───
 
     async function fetchESPN(path) {
       if (espnCache[path]) return espnCache[path];
@@ -325,13 +372,11 @@
       return completed.map(e => {
         const comp = e.competitions[0];
         const teams = comp.competitors || [];
-        const home = teams.find(t => t.homeAway === 'home');
-        const away = teams.find(t => t.homeAway === 'away');
         const teamEntry = teams.find(t => t.id === String(schedData.team?.id));
         const oppEntry = teams.find(t => t.id !== String(schedData.team?.id));
-        const won = teamEntry && teamEntry.winner;
-        const teamScore = teamEntry ? teamEntry.score?.displayValue || teamEntry.score : '?';
-        const oppScore = oppEntry ? oppEntry.score?.displayValue || oppEntry.score : '?';
+        const won = teamEntry ? teamEntry.winner : false;
+        const teamScore = teamEntry ? (teamEntry.score?.displayValue || teamEntry.score || '?') : '?';
+        const oppScore = oppEntry ? (oppEntry.score?.displayValue || oppEntry.score || '?') : '?';
         const oppName = oppEntry ? (oppEntry.team?.abbreviation || oppEntry.team?.shortDisplayName || '?') : '?';
         return { won, teamScore, oppScore, oppName, date: e.date };
       });
@@ -393,18 +438,19 @@
       }
 
       const edgeAbs = Math.abs(edge);
-      const lineStr = spread != null ? (spread > 0 ? `${awayAbbrev} ${(-spread).toFixed(1)}` : `${homeAbbrev} ${spread.toFixed(1)}`) : 'N/A';
+      const pickSide = game.pick_abbrev;
+      const pickSpread = game.pick_spread;
 
       return `<div class="model-callout">
-        <div class="callout-main">Model predicts ${predSide} by ${predPts.toFixed(1)} pts</div>
-        <div class="callout-sub">Line: ${lineStr} | Edge: ${edgeAbs.toFixed(1)} pts (model thinks the line is ${edgeAbs.toFixed(1)} pts off)</div>
+        <div class="callout-main">Model predicts ${predSide} by ${predPts.toFixed(1)} pts &rarr; Take ${pickSide} ${pickSpread}</div>
+        <div class="callout-sub">Edge: ${edgeAbs.toFixed(1)} pts (model thinks the line is off by ${edgeAbs.toFixed(1)})</div>
       </div>`;
     }
 
     function renderKenpomTable(game) {
       const hk = game.home_kenpom;
       const ak = game.away_kenpom;
-      if (!hk && !ak) return '<div class="no-data">KenPom data unavailable</div>';
+      if (!hk && !ak) return '<div class="no-data">KenPom data not available for this game</div>';
 
       const rows = [
         ['KP Rank', hk?.rank, ak?.rank, 'lower'],
@@ -493,15 +539,13 @@
 
     // ─── Expand / Collapse ───
 
-    let currentExpanded = null;
-    let picksData = null;
+    async function toggleGameDetail(gameIdx) {
+      const detailEl = document.getElementById(`detail-${gameIdx}`);
+      const cardEl = document.getElementById(`card-${gameIdx}`);
+      if (!detailEl || !cardEl) return;
 
-    async function toggleGameDetail(idx) {
-      const detailEl = document.getElementById(`detail-${idx}`);
-      const cardEl = document.getElementById(`card-${idx}`);
-
-      // Collapse current if open
-      if (currentExpanded !== null && currentExpanded !== idx) {
+      // Collapse current if open and different
+      if (currentExpanded !== null && currentExpanded !== gameIdx) {
         const prevDetail = document.getElementById(`detail-${currentExpanded}`);
         const prevCard = document.getElementById(`card-${currentExpanded}`);
         if (prevDetail) prevDetail.classList.remove('open');
@@ -509,29 +553,37 @@
       }
 
       // Toggle this one
-      if (currentExpanded === idx) {
+      if (currentExpanded === gameIdx) {
         detailEl.classList.remove('open');
         cardEl.classList.remove('expanded');
         currentExpanded = null;
         return;
       }
 
-      currentExpanded = idx;
+      currentExpanded = gameIdx;
       cardEl.classList.add('expanded');
       detailEl.classList.add('open');
 
-      // If already loaded, done
-      if (detailEl.dataset.loaded === 'true') return;
+      // If already loaded from cache, restore and done
+      if (detailCache[gameIdx]) {
+        detailEl.innerHTML = detailCache[gameIdx];
+        return;
+      }
 
-      const game = picksData.games[idx];
+      // Get the game data directly from the array
+      const game = picksData.games[gameIdx];
+      if (!game) {
+        detailEl.innerHTML = '<div class="no-data">Game data not found</div>';
+        return;
+      }
+
       const homeId = game.home_espn_id;
       const awayId = game.away_espn_id;
 
       // Show loading
-      detailEl.innerHTML = '<div class="detail-loading"><span class="spinner"></span> Loading scouting data...</div>';
-      detailEl.classList.add('open');
+      detailEl.innerHTML = '<div class="detail-loading"><span class="mini-spinner"></span> Loading scouting data...</div>';
 
-      // Start building content with KenPom (available immediately)
+      // Build content — KenPom is available immediately from JSON
       let html = '';
       html += renderModelCallout(game);
 
@@ -542,25 +594,15 @@
       </div>`;
 
       // Fetch ESPN data if IDs available
-      let homeSchedData = null, awaySchedData = null;
-      let homeTeamData = null, awayTeamData = null;
-
       if (homeId || awayId) {
+        let homeSchedData = null, awaySchedData = null;
+        let homeTeamData = null, awayTeamData = null;
+
         const promises = [];
-        if (homeId) {
-          promises.push(fetchTeamSchedule(homeId));
-          promises.push(fetchTeamRoster(homeId));
-        } else {
-          promises.push(Promise.resolve(null));
-          promises.push(Promise.resolve(null));
-        }
-        if (awayId) {
-          promises.push(fetchTeamSchedule(awayId));
-          promises.push(fetchTeamRoster(awayId));
-        } else {
-          promises.push(Promise.resolve(null));
-          promises.push(Promise.resolve(null));
-        }
+        promises.push(homeId ? fetchTeamSchedule(homeId) : Promise.resolve(null));
+        promises.push(homeId ? fetchTeamRoster(homeId) : Promise.resolve(null));
+        promises.push(awayId ? fetchTeamSchedule(awayId) : Promise.resolve(null));
+        promises.push(awayId ? fetchTeamRoster(awayId) : Promise.resolve(null));
 
         try {
           [homeSchedData, homeTeamData, awaySchedData, awayTeamData] = await Promise.all(promises);
@@ -598,12 +640,10 @@
             </div>
           </div>`;
         }
-      } else {
-        html += '<div class="no-data" style="margin-top:8px">ESPN data unavailable for this matchup</div>';
       }
 
       detailEl.innerHTML = html;
-      detailEl.dataset.loaded = 'true';
+      detailCache[gameIdx] = html;
     }
 
     // ─── Utility Functions ───
@@ -638,7 +678,28 @@
       img.style.display = 'none';
     }
 
-    // ─── Main Render ───
+    // ─── Sort + Render ───
+
+    function setSort(mode) {
+      currentSort = mode;
+      currentExpanded = null;
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-sort="${mode}"]`).classList.add('active');
+      if (picksData) renderGames(picksData);
+    }
+
+    function getSortedGames(games) {
+      // Make a copy with original indices
+      const indexed = games.map((g, i) => ({ game: g, origIdx: i }));
+
+      if (currentSort === 'time') {
+        indexed.sort((a, b) => new Date(a.game.commence_time) - new Date(b.game.commence_time));
+      } else {
+        // edge (default) — sort by absolute edge descending
+        indexed.sort((a, b) => Math.abs(b.game.edge) - Math.abs(a.game.edge));
+      }
+      return indexed;
+    }
 
     function renderGames(data) {
       picksData = data;
@@ -654,84 +715,93 @@
         return;
       }
 
-      // Group games by local date
-      const groups = {};
-      for (const g of data.games) {
-        const key = getDateKey(g.commence_time);
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(g);
-      }
+      const sorted = getSortedGames(data.games);
 
-      // Sort date keys chronologically
-      const sortedDates = Object.keys(groups).sort();
+      if (currentSort === 'time') {
+        // Group by date when sorting by time
+        const groups = {};
+        for (const item of sorted) {
+          const key = getDateKey(item.game.commence_time);
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(item);
+        }
 
-      // Build a flat index so we can track game position globally
-      let globalIdx = 0;
-      const indexedGroups = [];
-      for (const dateKey of sortedDates) {
-        const dayGames = groups[dateKey];
-        dayGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
-        const indexed = dayGames.map(g => {
-          const idx = data.games.indexOf(g);
-          return { game: g, idx };
-        });
-        indexedGroups.push({ dateKey, label: getDateLabel(dayGames[0].commence_time), games: indexed });
-      }
+        const sortedDates = Object.keys(groups).sort();
+        let html = '';
 
-      let html = '';
-      for (const group of indexedGroups) {
-        // Date group header
-        html += `
-          <div class="date-header">
-            <span class="date-label">${group.label}</span>
-            <span class="date-line"></span>
-            <span class="date-count">${group.games.length} pick${group.games.length !== 1 ? 's' : ''}</span>
-          </div>`;
+        for (const dateKey of sortedDates) {
+          const dayItems = groups[dateKey];
+          const label = getDateLabel(dayItems[0].game.commence_time);
 
-        // Table header for this group
-        html += `
+          html += `
+            <div class="date-header">
+              <span class="date-label">${label}</span>
+              <span class="date-line"></span>
+              <span class="date-count">${dayItems.length} pick${dayItems.length !== 1 ? 's' : ''}</span>
+            </div>`;
+
+          html += `
+            <div class="table-header">
+              <div>Game Info</div>
+              <div class="col-odds">Current Odds</div>
+              <div class="col-pick">Model Pick</div>
+            </div>`;
+
+          for (const item of dayItems) {
+            html += renderGameCard(item.game, item.origIdx);
+          }
+        }
+
+        container.innerHTML = html;
+      } else {
+        // Flat list when sorting by edge
+        let html = `
           <div class="table-header">
             <div>Game Info</div>
             <div class="col-odds">Current Odds</div>
             <div class="col-pick">Model Pick</div>
           </div>`;
 
-        for (const { game: g, idx } of group.games) {
-          const isStrong = Math.abs(g.edge) >= 7;
-          const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
-          const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
-          const totalStr = g.total != null ? `o${g.total}` : '';
-
-          html += `
-            <div class="game-card" id="card-${idx}" onclick="toggleGameDetail(${idx})">
-              <div class="game-info">
-                <div class="team-row">
-                  <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
-                  <span class="team-name">${g.away_team.toUpperCase()}</span>
-                </div>
-                <div class="team-row">
-                  <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
-                  <span class="team-name">${g.home_team.toUpperCase()}</span>
-                </div>
-                <div class="game-time">${formatTime(g.commence_time)}</div>
-              </div>
-
-              <div class="odds-col">
-                ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
-                ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
-              </div>
-
-              <div class="${pickClass}">
-                <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
-                <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
-                <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
-              </div>
-            </div>
-            <div class="game-detail" id="detail-${idx}"></div>`;
+        for (const item of sorted) {
+          html += renderGameCard(item.game, item.origIdx);
         }
-      }
 
-      container.innerHTML = html;
+        container.innerHTML = html;
+      }
+    }
+
+    function renderGameCard(g, idx) {
+      const isStrong = Math.abs(g.edge) >= 7;
+      const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
+      const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
+      const totalStr = g.total != null ? `o${g.total}` : '';
+
+      return `
+        <div class="game-card" id="card-${idx}" onclick="toggleGameDetail(${idx})">
+          <div class="game-info">
+            <div class="team-row">
+              <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
+              <span class="team-name">${g.away_team.toUpperCase()}</span>
+            </div>
+            <div class="team-row">
+              <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
+              <span class="team-name">${g.home_team.toUpperCase()}</span>
+            </div>
+            <div class="game-time">${formatTime(g.commence_time)}</div>
+          </div>
+
+          <div class="odds-col">
+            ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
+            ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
+          </div>
+
+          <div class="${pickClass}">
+            <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
+            <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
+            <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
+          </div>
+        </div>
+        <div class="game-detail" id="detail-${idx}"></div>`;
     }
 
     function renderError(msg) {
@@ -740,7 +810,9 @@
       document.getElementById('summary-count').textContent = 'Error loading picks';
     }
 
-    fetch(API_URL)
+    // ─── Init ───
+    // Cache-bust to avoid stale data
+    fetch(API_URL + '?t=' + Date.now())
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(renderGames)
       .catch(e => renderError(`Failed to load picks: ${e.message}. Picks may not have been generated yet today.`));
