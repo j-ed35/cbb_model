@@ -912,6 +912,14 @@ def get_logo_url(odds_api_name: str) -> str:
     return _ESPN_LOGO_URL.format(id=espn_id)
 
 
+def get_espn_id(odds_api_name: str) -> int | None:
+    """Return the ESPN numeric team ID, or None if unknown."""
+    espn_id = ODDS_API_TO_ESPN_ID.get(odds_api_name)
+    if espn_id is None:
+        espn_id = _fuzzy_lookup(odds_api_name, ODDS_API_TO_ESPN_ID)
+    return espn_id
+
+
 def get_abbrev(odds_api_name: str) -> str:
     """Return a short abbreviation for display.
 

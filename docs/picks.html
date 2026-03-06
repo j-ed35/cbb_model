@@ -71,9 +71,11 @@
       padding: 12px 16px;
       align-items: center;
       transition: background 0.15s;
+      cursor: pointer;
     }
-    .game-card:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+    .game-card:last-of-type { border-bottom: none; }
     .game-card:hover { background: #f8f9fa; }
+    .game-card.expanded { background: #f0f4ff; border-bottom: none; }
 
     /* Game info column */
     .game-info { display: flex; flex-direction: column; gap: 6px; }
@@ -128,12 +130,133 @@
     .error { text-align: center; padding: 40px; color: #c00; }
     .footer { text-align: center; padding: 24px; font-size: 12px; color: #999; }
 
+    /* ─── Detail Panel ─── */
+    .game-detail {
+      background: #fafbfd;
+      border-bottom: 1px solid #e8ecf0;
+      padding: 0 16px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+    }
+    .game-detail.open {
+      max-height: 2000px;
+      padding: 20px 16px;
+    }
+    .detail-loading {
+      text-align: center; padding: 20px; color: #888; font-size: 13px;
+    }
+    .detail-loading .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #ddd; border-top-color: #1a1a2e;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+
+    /* Model callout */
+    .model-callout {
+      background: #1a1a2e; color: white; border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 18px;
+      font-size: 14px; line-height: 1.5;
+    }
+    .model-callout .callout-main { font-weight: 600; font-size: 15px; }
+    .model-callout .callout-sub { color: #99aabb; font-size: 13px; margin-top: 4px; }
+
+    /* Section headers */
+    .detail-section { margin-bottom: 18px; }
+    .detail-section:last-child { margin-bottom: 0; }
+    .section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #889; margin-bottom: 8px;
+    }
+
+    /* KenPom comparison table */
+    .kp-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; background: white;
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .kp-table th, .kp-table td {
+      padding: 8px 12px; text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .kp-table th { font-weight: 700; background: #f5f7fa; }
+    .kp-table th:first-child, .kp-table td:first-child {
+      text-align: left; font-weight: 600; color: #667;
+    }
+    .kp-table .better { color: #16a34a; font-weight: 700; }
+
+    /* Recent form */
+    .form-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 6px; flex-wrap: wrap;
+    }
+    .form-team-label {
+      font-size: 13px; font-weight: 700; min-width: 50px;
+    }
+    .form-pills { display: flex; gap: 3px; flex-wrap: wrap; }
+    .form-pill {
+      display: inline-block; width: 26px; height: 26px; line-height: 26px;
+      text-align: center; border-radius: 4px; font-size: 11px; font-weight: 700;
+      color: white; cursor: default; position: relative;
+    }
+    .form-pill.win { background: #16a34a; }
+    .form-pill.loss { background: #dc2626; }
+    .form-pill-tooltip {
+      display: none; position: absolute; bottom: 110%; left: 50%;
+      transform: translateX(-50%); background: #333; color: white;
+      padding: 4px 8px; border-radius: 4px; font-size: 11px;
+      white-space: nowrap; z-index: 10; font-weight: 400;
+    }
+    .form-pill:hover .form-pill-tooltip { display: block; }
+    .form-summary {
+      font-size: 12px; color: #888; margin-left: 4px;
+    }
+
+    /* Matchups */
+    .matchup-item {
+      background: white; border-radius: 6px; padding: 10px 14px;
+      margin-bottom: 6px; font-size: 13px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .matchup-date { color: #888; font-size: 12px; }
+    .matchup-score { font-weight: 700; }
+    .matchup-venue { color: #888; font-size: 12px; }
+    .no-data { color: #999; font-size: 13px; font-style: italic; }
+
+    /* Roster grid */
+    .roster-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .roster-col h4 {
+      font-size: 13px; font-weight: 700; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .roster-col h4 img { width: 24px; height: 24px; object-fit: contain; }
+    .player-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    .player-item:last-child { border-bottom: none; }
+    .player-img {
+      width: 36px; height: 36px; border-radius: 50%;
+      object-fit: cover; background: #eee; flex-shrink: 0;
+    }
+    .player-info { flex: 1; min-width: 0; }
+    .player-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-meta { font-size: 11px; color: #888; }
+
     @media (max-width: 700px) {
       .table-header, .game-card { grid-template-columns: 1fr 90px 130px; }
       .team-name { max-width: 120px; font-size: 13px; }
       .pick-text { font-size: 13px; }
       .team-logo { width: 24px; height: 24px; }
       .edge-badge { display: none; }
+      .roster-grid { grid-template-columns: 1fr; }
+      .kp-table { font-size: 12px; }
+      .kp-table th, .kp-table td { padding: 6px 8px; }
     }
   </style>
 </head>
@@ -164,6 +287,327 @@
   <script>
     const API_URL = './data/picks.json';
 
+    // ─── ESPN API cache ───
+    const espnCache = {};
+
+    async function fetchESPN(path) {
+      if (espnCache[path]) return espnCache[path];
+      try {
+        const r = await fetch(`https://site.api.espn.com${path}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        espnCache[path] = data;
+        return data;
+      } catch (e) {
+        console.warn('ESPN API error:', path, e);
+        return null;
+      }
+    }
+
+    function fetchTeamSchedule(espnId) {
+      return fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${espnId}/schedule`);
+    }
+    function fetchTeamRoster(espnId) {
+      return fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${espnId}`);
+    }
+
+    // ─── Data Parsers ───
+
+    function getRecentForm(schedData, n = 10) {
+      if (!schedData || !schedData.events) return [];
+      const completed = schedData.events
+        .filter(e => e.competitions && e.competitions[0] && e.competitions[0].status &&
+                     e.competitions[0].status.type && e.competitions[0].status.type.completed)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, n)
+        .reverse();
+
+      return completed.map(e => {
+        const comp = e.competitions[0];
+        const teams = comp.competitors || [];
+        const home = teams.find(t => t.homeAway === 'home');
+        const away = teams.find(t => t.homeAway === 'away');
+        const teamEntry = teams.find(t => t.id === String(schedData.team?.id));
+        const oppEntry = teams.find(t => t.id !== String(schedData.team?.id));
+        const won = teamEntry && teamEntry.winner;
+        const teamScore = teamEntry ? teamEntry.score?.displayValue || teamEntry.score : '?';
+        const oppScore = oppEntry ? oppEntry.score?.displayValue || oppEntry.score : '?';
+        const oppName = oppEntry ? (oppEntry.team?.abbreviation || oppEntry.team?.shortDisplayName || '?') : '?';
+        return { won, teamScore, oppScore, oppName, date: e.date };
+      });
+    }
+
+    function findMatchups(schedData, oppEspnId) {
+      if (!schedData || !schedData.events || !oppEspnId) return [];
+      return schedData.events.filter(e => {
+        if (!e.competitions || !e.competitions[0]) return false;
+        const comp = e.competitions[0];
+        if (!comp.status || !comp.status.type || !comp.status.type.completed) return false;
+        const teams = comp.competitors || [];
+        return teams.some(t => String(t.id) === String(oppEspnId));
+      }).map(e => {
+        const comp = e.competitions[0];
+        const teams = comp.competitors || [];
+        const home = teams.find(t => t.homeAway === 'home');
+        const away = teams.find(t => t.homeAway === 'away');
+        return {
+          date: e.date,
+          homeName: home?.team?.displayName || home?.team?.shortDisplayName || '?',
+          homeScore: home?.score?.displayValue || home?.score || '?',
+          awayName: away?.team?.displayName || away?.team?.shortDisplayName || '?',
+          awayScore: away?.score?.displayValue || away?.score || '?',
+          venue: comp.venue ? comp.venue.fullName : '',
+          city: comp.venue && comp.venue.address ? `${comp.venue.address.city || ''}, ${comp.venue.address.state || ''}` : '',
+        };
+      }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    function parseRoster(teamData) {
+      if (!teamData || !teamData.team || !teamData.team.athletes) return [];
+      return teamData.team.athletes.slice(0, 8).map(a => ({
+        name: a.displayName || a.fullName || '?',
+        number: a.jersey || '',
+        position: a.position?.abbreviation || '',
+        year: a.experience?.abbreviation || '',
+        height: a.displayHeight || '',
+        headshot: a.headshot ? a.headshot.href : null,
+      }));
+    }
+
+    // ─── Renderers ───
+
+    function renderModelCallout(game) {
+      const homeAbbrev = game.home_abbrev;
+      const awayAbbrev = game.away_abbrev;
+      const margin = game.pred_margin;
+      const edge = game.edge;
+      const spread = game.spread_home;
+
+      let predSide, predPts;
+      if (margin > 0) {
+        predSide = homeAbbrev;
+        predPts = Math.abs(margin);
+      } else {
+        predSide = awayAbbrev;
+        predPts = Math.abs(margin);
+      }
+
+      const edgeAbs = Math.abs(edge);
+      const lineStr = spread != null ? (spread > 0 ? `${awayAbbrev} ${(-spread).toFixed(1)}` : `${homeAbbrev} ${spread.toFixed(1)}`) : 'N/A';
+
+      return `<div class="model-callout">
+        <div class="callout-main">Model predicts ${predSide} by ${predPts.toFixed(1)} pts</div>
+        <div class="callout-sub">Line: ${lineStr} | Edge: ${edgeAbs.toFixed(1)} pts (model thinks the line is ${edgeAbs.toFixed(1)} pts off)</div>
+      </div>`;
+    }
+
+    function renderKenpomTable(game) {
+      const hk = game.home_kenpom;
+      const ak = game.away_kenpom;
+      if (!hk && !ak) return '<div class="no-data">KenPom data unavailable</div>';
+
+      const rows = [
+        ['KP Rank', hk?.rank, ak?.rank, 'lower'],
+        ['AdjEM', hk?.adj_em, ak?.adj_em, 'higher'],
+        ['Adj Off', hk?.adj_oe, ak?.adj_oe, 'higher', hk?.adj_oe_rank, ak?.adj_oe_rank],
+        ['Adj Def', hk?.adj_de, ak?.adj_de, 'lower', hk?.adj_de_rank, ak?.adj_de_rank],
+        ['Tempo', hk?.adj_tempo, ak?.adj_tempo, null, hk?.adj_tempo_rank, ak?.adj_tempo_rank],
+        ['Record', hk?.record, ak?.record, null],
+        ['Conference', hk?.conference, ak?.conference, null],
+      ];
+
+      let html = `<table class="kp-table">
+        <tr><th></th><th>${game.home_abbrev}</th><th>${game.away_abbrev}</th></tr>`;
+
+      for (const [label, hv, av, betterDir, hRank, aRank] of rows) {
+        let hClass = '', aClass = '';
+        if (betterDir && hv != null && av != null) {
+          if (betterDir === 'higher') {
+            if (hv > av) hClass = 'better'; else if (av > hv) aClass = 'better';
+          } else {
+            if (hv < av) hClass = 'better'; else if (av < hv) aClass = 'better';
+          }
+        }
+        const hStr = hv != null ? (hRank != null ? `${hv} (${hRank})` : hv) : '-';
+        const aStr = av != null ? (aRank != null ? `${av} (${aRank})` : av) : '-';
+        html += `<tr><td>${label}</td><td class="${hClass}">${hStr}</td><td class="${aClass}">${aStr}</td></tr>`;
+      }
+      html += '</table>';
+      return html;
+    }
+
+    function renderRecentForm(abbrev, formData) {
+      if (!formData || formData.length === 0) return '';
+      const wins = formData.filter(f => f.won).length;
+      const losses = formData.length - wins;
+
+      let pills = '';
+      for (const f of formData) {
+        const cls = f.won ? 'win' : 'loss';
+        const lbl = f.won ? 'W' : 'L';
+        const tip = `${f.won ? 'W' : 'L'} ${f.teamScore}-${f.oppScore} vs ${f.oppName}`;
+        pills += `<span class="form-pill ${cls}">${lbl}<span class="form-pill-tooltip">${tip}</span></span>`;
+      }
+
+      return `<div class="form-row">
+        <span class="form-team-label">${abbrev}</span>
+        <span class="form-pills">${pills}</span>
+        <span class="form-summary">${wins}-${losses} L${formData.length}</span>
+      </div>`;
+    }
+
+    function renderMatchups(matchups) {
+      if (!matchups || matchups.length === 0) return '<div class="no-data">No previous meetings this season</div>';
+      let html = '';
+      for (const m of matchups) {
+        const d = new Date(m.date);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const venueStr = m.venue ? ` (${m.city || m.venue})` : '';
+        html += `<div class="matchup-item">
+          <span class="matchup-date">${dateStr}:</span>
+          <span class="matchup-score">${m.awayName} ${m.awayScore}, ${m.homeName} ${m.homeScore}</span>
+          <span class="matchup-venue">${venueStr}</span>
+        </div>`;
+      }
+      return html;
+    }
+
+    function renderRoster(label, logo, players) {
+      if (!players || players.length === 0) return '';
+      let html = `<div class="roster-col"><h4><img src="${logo}" alt="" onerror="fallbackLogo(this)">${label}</h4>`;
+      for (const p of players) {
+        const img = p.headshot
+          ? `<img class="player-img" src="${p.headshot}" alt="" onerror="this.style.display='none'">`
+          : `<div class="player-img" style="background:#ddd"></div>`;
+        html += `<div class="player-item">
+          ${img}
+          <div class="player-info">
+            <div class="player-name">${p.number ? '#' + p.number + ' ' : ''}${p.name}</div>
+            <div class="player-meta">${[p.position, p.year, p.height].filter(Boolean).join(' | ')}</div>
+          </div>
+        </div>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    // ─── Expand / Collapse ───
+
+    let currentExpanded = null;
+    let picksData = null;
+
+    async function toggleGameDetail(idx) {
+      const detailEl = document.getElementById(`detail-${idx}`);
+      const cardEl = document.getElementById(`card-${idx}`);
+
+      // Collapse current if open
+      if (currentExpanded !== null && currentExpanded !== idx) {
+        const prevDetail = document.getElementById(`detail-${currentExpanded}`);
+        const prevCard = document.getElementById(`card-${currentExpanded}`);
+        if (prevDetail) prevDetail.classList.remove('open');
+        if (prevCard) prevCard.classList.remove('expanded');
+      }
+
+      // Toggle this one
+      if (currentExpanded === idx) {
+        detailEl.classList.remove('open');
+        cardEl.classList.remove('expanded');
+        currentExpanded = null;
+        return;
+      }
+
+      currentExpanded = idx;
+      cardEl.classList.add('expanded');
+      detailEl.classList.add('open');
+
+      // If already loaded, done
+      if (detailEl.dataset.loaded === 'true') return;
+
+      const game = picksData.games[idx];
+      const homeId = game.home_espn_id;
+      const awayId = game.away_espn_id;
+
+      // Show loading
+      detailEl.innerHTML = '<div class="detail-loading"><span class="spinner"></span> Loading scouting data...</div>';
+      detailEl.classList.add('open');
+
+      // Start building content with KenPom (available immediately)
+      let html = '';
+      html += renderModelCallout(game);
+
+      // KenPom section
+      html += `<div class="detail-section">
+        <div class="section-title">KenPom Comparison</div>
+        ${renderKenpomTable(game)}
+      </div>`;
+
+      // Fetch ESPN data if IDs available
+      let homeSchedData = null, awaySchedData = null;
+      let homeTeamData = null, awayTeamData = null;
+
+      if (homeId || awayId) {
+        const promises = [];
+        if (homeId) {
+          promises.push(fetchTeamSchedule(homeId));
+          promises.push(fetchTeamRoster(homeId));
+        } else {
+          promises.push(Promise.resolve(null));
+          promises.push(Promise.resolve(null));
+        }
+        if (awayId) {
+          promises.push(fetchTeamSchedule(awayId));
+          promises.push(fetchTeamRoster(awayId));
+        } else {
+          promises.push(Promise.resolve(null));
+          promises.push(Promise.resolve(null));
+        }
+
+        try {
+          [homeSchedData, homeTeamData, awaySchedData, awayTeamData] = await Promise.all(promises);
+        } catch (e) {
+          console.warn('ESPN fetch error:', e);
+        }
+
+        // Previous Matchups
+        const matchups = homeSchedData ? findMatchups(homeSchedData, awayId) : [];
+        html += `<div class="detail-section">
+          <div class="section-title">Previous Matchups</div>
+          ${renderMatchups(matchups)}
+        </div>`;
+
+        // Recent Form
+        const homeForm = getRecentForm(homeSchedData, 10);
+        const awayForm = getRecentForm(awaySchedData, 10);
+        if (homeForm.length > 0 || awayForm.length > 0) {
+          html += `<div class="detail-section">
+            <div class="section-title">Recent Form (Last 10)</div>
+            ${renderRecentForm(game.home_abbrev, homeForm)}
+            ${renderRecentForm(game.away_abbrev, awayForm)}
+          </div>`;
+        }
+
+        // Roster
+        const homePlayers = parseRoster(homeTeamData);
+        const awayPlayers = parseRoster(awayTeamData);
+        if (homePlayers.length > 0 || awayPlayers.length > 0) {
+          html += `<div class="detail-section">
+            <div class="section-title">Key Players</div>
+            <div class="roster-grid">
+              ${renderRoster(game.home_abbrev, game.home_logo, homePlayers)}
+              ${renderRoster(game.away_abbrev, game.away_logo, awayPlayers)}
+            </div>
+          </div>`;
+        }
+      } else {
+        html += '<div class="no-data" style="margin-top:8px">ESPN data unavailable for this matchup</div>';
+      }
+
+      detailEl.innerHTML = html;
+      detailEl.dataset.loaded = 'true';
+    }
+
+    // ─── Utility Functions ───
+
     function formatTime(isoStr) {
       if (!isoStr) return '';
       const d = new Date(isoStr);
@@ -186,7 +630,6 @@
 
     function getDateKey(isoStr) {
       if (!isoStr) return '9999-99-99';
-      // Group by local date
       const d = new Date(isoStr);
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
@@ -195,7 +638,10 @@
       img.style.display = 'none';
     }
 
+    // ─── Main Render ───
+
     function renderGames(data) {
+      picksData = data;
       const container = document.getElementById('games-container');
       const summaryCount = document.getElementById('summary-count');
       const summaryDate = document.getElementById('summary-date');
@@ -219,20 +665,27 @@
       // Sort date keys chronologically
       const sortedDates = Object.keys(groups).sort();
 
-      let html = '';
+      // Build a flat index so we can track game position globally
+      let globalIdx = 0;
+      const indexedGroups = [];
       for (const dateKey of sortedDates) {
         const dayGames = groups[dateKey];
-        const label = getDateLabel(dayGames[0].commence_time);
-
-        // Sort games within day by time
         dayGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+        const indexed = dayGames.map(g => {
+          const idx = data.games.indexOf(g);
+          return { game: g, idx };
+        });
+        indexedGroups.push({ dateKey, label: getDateLabel(dayGames[0].commence_time), games: indexed });
+      }
 
+      let html = '';
+      for (const group of indexedGroups) {
         // Date group header
         html += `
           <div class="date-header">
-            <span class="date-label">${label}</span>
+            <span class="date-label">${group.label}</span>
             <span class="date-line"></span>
-            <span class="date-count">${dayGames.length} pick${dayGames.length !== 1 ? 's' : ''}</span>
+            <span class="date-count">${group.games.length} pick${group.games.length !== 1 ? 's' : ''}</span>
           </div>`;
 
         // Table header for this group
@@ -243,14 +696,14 @@
             <div class="col-pick">Model Pick</div>
           </div>`;
 
-        for (const g of dayGames) {
+        for (const { game: g, idx } of group.games) {
           const isStrong = Math.abs(g.edge) >= 7;
           const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
           const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
           const totalStr = g.total != null ? `o${g.total}` : '';
 
           html += `
-            <div class="game-card">
+            <div class="game-card" id="card-${idx}" onclick="toggleGameDetail(${idx})">
               <div class="game-info">
                 <div class="team-row">
                   <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
@@ -273,7 +726,8 @@
                 <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
                 <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
               </div>
-            </div>`;
+            </div>
+            <div class="game-detail" id="detail-${idx}"></div>`;
         }
       }
 

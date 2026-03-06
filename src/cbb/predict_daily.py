@@ -314,9 +314,45 @@ def generate_predictions(
     return pd.DataFrame(results)
 
 
-def predictions_to_json(pred_df: pd.DataFrame, threshold: float) -> dict:
+def _kenpom_profile(team_name: str, kp_name: str, ratings: pd.DataFrame) -> dict | None:
+    """Extract a KenPom profile dict for embedding in JSON output."""
+    if not kp_name:
+        return None
+    col = "TeamName" if "TeamName" in ratings.columns else "Team"
+    rows = ratings[ratings[col] == kp_name]
+    if len(rows) == 0:
+        return None
+    r = rows.iloc[0]
+
+    def safe_float(val):
+        try:
+            return float(str(val).replace("+", ""))
+        except (ValueError, TypeError):
+            return None
+
+    def safe_int(val):
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return None
+
+    return {
+        "rank": safe_int(r.get("Rk")),
+        "adj_em": safe_float(r.get("AdjEM")),
+        "adj_oe": safe_float(r.get("AdjOE")),
+        "adj_oe_rank": safe_int(r.get("AdjO.Rank")),
+        "adj_de": safe_float(r.get("AdjDE")),
+        "adj_de_rank": safe_int(r.get("AdjD.Rank")),
+        "adj_tempo": safe_float(r.get("AdjTempo")),
+        "adj_tempo_rank": safe_int(r.get("AdjT.Rank")),
+        "record": str(r.get("W-L", "")),
+        "conference": str(r.get("Conf", "")),
+    }
+
+
+def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.DataFrame = None) -> dict:
     """Convert predictions DataFrame to JSON-serializable dict for the API."""
-    from src.cbb.utils.espn_ids import get_logo_url, get_abbrev
+    from src.cbb.utils.espn_ids import get_logo_url, get_abbrev, get_espn_id
 
     MAX_EDGE = 15.0
     games = []
@@ -333,13 +369,15 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float) -> dict:
             pick_team = row["away_team"]
             pick_spread = f"{-spread:+.1f}" if pd.notna(spread) else ""
 
-        games.append({
+        game = {
             "home_team": row["home_team"],
             "away_team": row["away_team"],
             "home_abbrev": get_abbrev(row["home_team"]),
             "away_abbrev": get_abbrev(row["away_team"]),
             "home_logo": get_logo_url(row["home_team"]),
             "away_logo": get_logo_url(row["away_team"]),
+            "home_espn_id": get_espn_id(row["home_team"]),
+            "away_espn_id": get_espn_id(row["away_team"]),
             "commence_time": row.get("commence_time", ""),
             "spread_home": float(spread) if pd.notna(spread) else None,
             "total": float(row["total"]) if pd.notna(row.get("total")) else None,
@@ -349,7 +387,16 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float) -> dict:
             "pick_abbrev": get_abbrev(pick_team),
             "pick_spread": pick_spread,
             "pick_logo": get_logo_url(pick_team),
-        })
+        }
+
+        # Embed KenPom profiles if ratings DataFrame is available
+        if ratings is not None:
+            home_kp = row.get("home_kp", "")
+            away_kp = row.get("away_kp", "")
+            game["home_kenpom"] = _kenpom_profile(row["home_team"], home_kp, ratings)
+            game["away_kenpom"] = _kenpom_profile(row["away_team"], away_kp, ratings)
+
+        games.append(game)
 
     # Sort by absolute edge descending
     games.sort(key=lambda g: abs(g["edge"]), reverse=True)
@@ -457,7 +504,7 @@ def main():
         console.print(f"[green]Saved: {out}[/green]")
 
     if args.json:
-        result = predictions_to_json(pred_df, threshold)
+        result = predictions_to_json(pred_df, threshold, ratings)
         # Save to docs/data for GitHub Pages
         json_dir = project_root / "docs" / "data"
         json_dir.mkdir(parents=True, exist_ok=True)
