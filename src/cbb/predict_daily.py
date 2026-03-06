@@ -45,8 +45,8 @@ def load_model(models_dir: Path) -> dict:
         return pickle.load(f)
 
 
-def fetch_kenpom_live() -> dict:
-    """Fetch live KenPom ratings via kenpompy."""
+def fetch_kenpom_live() -> pd.DataFrame:
+    """Fetch live KenPom ratings. Uses kenpompy (cloudscraper) to bypass Cloudflare."""
     from kenpompy.misc import get_pomeroy_ratings
     from kenpompy.utils import login
 

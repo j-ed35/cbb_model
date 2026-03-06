@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install kenpompy numpy pandas requests scikit-learn beautifulsoup4 html5lib lxml rich
+          pip install kenpompy cloudscraper numpy pandas requests scikit-learn beautifulsoup4 html5lib lxml rich pyarrow
 
       - name: Generate predictions
         env:
