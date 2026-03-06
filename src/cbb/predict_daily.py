@@ -127,28 +127,76 @@ def parse_games(games_data: list[dict]) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
+# Hardcoded overrides for Odds API names that the CSV/fuzzy matching can't handle
+_ODDS_API_OVERRIDES: dict[str, str] = {
+    "UNLV Rebels": "UNLV",
+    "Omaha Mavericks": "Nebraska Omaha",
+    "Queens University Royals": "Queens",
+    "Arizona St Sun Devils": "Arizona St.",
+    "North Dakota Fighting Hawks": "North Dakota",
+}
+
+
 def map_team_name(name: str, kenpom_teams: set, team_map: dict) -> Optional[str]:
     """Map Odds API team name to KenPom name."""
     if name in kenpom_teams:
         return name
     if name in team_map:
         return team_map[name]
+    if name in _ODDS_API_OVERRIDES:
+        return _ODDS_API_OVERRIDES[name]
 
-    # Try case-insensitive
+    # Try common abbreviation expansions then check the map again
+    # Apply all expansions: "St" -> "State", "SE" -> "Southeast", etc.
+    expanded = name
+    if " St " in expanded:
+        expanded = expanded.replace(" St ", " State ")
+    if expanded.startswith("SE "):
+        expanded = "Southeast " + expanded[3:]
+
+    if expanded != name:
+        if expanded in team_map:
+            return team_map[expanded]
+        if expanded in kenpom_teams:
+            return expanded
+        # Also try the expanded form in case-insensitive matching
+        exp_lower = expanded.lower()
+        for kp in kenpom_teams:
+            if kp.lower() == exp_lower:
+                return kp
+
+    # Try case-insensitive exact match
     lower = name.lower()
     for kp in kenpom_teams:
         if kp.lower() == lower:
             return kp
 
-    # Try word overlap (strip mascot)
-    words = set(lower.split())
+    # Try word overlap on school name (strip mascot = last word)
+    name_words = lower.split()
+    name_core = set(name_words[:-1]) if len(name_words) > 1 else set(name_words)
+
+    # First pass: require 2+ word overlap to avoid false positives
     best, best_score = None, 0
     for kp in kenpom_teams:
-        overlap = len(words & set(kp.lower().split()))
-        if overlap > best_score and overlap >= 1:
+        kp_lower = kp.lower()
+        kp_words = kp_lower.split()
+        kp_core = set(kp_words) if len(kp_words) == 1 else set(kp_words[:-1])
+        overlap = len(name_core & kp_core)
+        if overlap > best_score and overlap >= 2:
             best_score = overlap
             best = kp
-    return best
+
+    if best:
+        return best
+
+    # Second pass: 1-word overlap (only if name core is a single word like "UNLV")
+    if len(name_core) == 1:
+        for kp in kenpom_teams:
+            kp_lower = kp.lower()
+            if kp_lower in name_core or name_core.issubset({kp_lower}):
+                return kp
+
+    return None
 
 
 def extract_features(home_kp: str, away_kp: str, ratings: pd.DataFrame, is_neutral: bool = False) -> Optional[dict]:
@@ -234,6 +282,17 @@ def generate_predictions(
         spread = pd.to_numeric(row["spread_home"], errors="coerce")
         edge = pred_margin - (-spread) if pd.notna(spread) else np.nan
 
+        # Cap absurd edges — usually indicates bad data from the Odds API
+        MAX_EDGE = 15.0
+        if pd.notna(edge) and abs(edge) > MAX_EDGE:
+            pick = "SKIP"
+            base.update({
+                "pred_margin": pred_margin, "edge": edge,
+                "pick": pick, "home_kp": home_kp, "away_kp": away_kp,
+            })
+            results.append(base)
+            continue
+
         if pd.isna(edge):
             pick = "NO LINE"
         elif abs(edge) < threshold:
@@ -259,10 +318,11 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float) -> dict:
     """Convert predictions DataFrame to JSON-serializable dict for the API."""
     from src.cbb.utils.espn_ids import get_logo_url, get_abbrev
 
+    MAX_EDGE = 15.0
     games = []
     for _, row in pred_df.iterrows():
         edge = row.get("edge")
-        if pd.isna(edge) or abs(edge) < threshold:
+        if pd.isna(edge) or abs(edge) < threshold or abs(edge) > MAX_EDGE:
             continue
 
         spread = row.get("spread_home")

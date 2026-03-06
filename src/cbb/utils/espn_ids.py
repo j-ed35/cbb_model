@@ -35,6 +35,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Appalachian State Mountaineers": 2026,
     "Arizona Wildcats": 12,
     "Arizona State Sun Devils": 9,
+    "Arizona St Sun Devils": 9,
     "Arkansas Razorbacks": 8,
     "Arkansas State Red Wolves": 2032,
     "Arkansas-Little Rock Trojans": 2031,
@@ -122,6 +123,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Florida Gulf Coast Eagles": 526,
     "Florida International Golden Panthers": 2229,
     "Florida State Seminoles": 52,
+    "Florida St Seminoles": 52,
     "Fordham Rams": 2230,
     "Fresno State Bulldogs": 278,
     "Furman Paladins": 231,
@@ -230,6 +232,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Montana Grizzlies": 149,
     "Montana State Bobcats": 147,
     "Morehead State Eagles": 2413,
+    "Morehead St Eagles": 2413,
     "Morgan State Bears": 2415,
     "Mount St. Mary's Mountaineers": 116,
     "Murray State Racers": 93,
@@ -239,6 +242,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "N.C. State Wolfpack": 152,
     "Nebraska Cornhuskers": 158,
     "Nebraska-Omaha Mavericks": 2437,
+    "Omaha Mavericks": 2437,
     "Nevada Wolf Pack": 2440,
     "New Hampshire Wildcats": 160,
     "New Mexico Lobos": 167,
@@ -272,6 +276,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Ohio State Buckeyes": 194,
     "Oklahoma Sooners": 201,
     "Oklahoma State Cowboys": 197,
+    "Oklahoma St Cowboys": 197,
     "Old Dominion Monarchs": 295,
     "Oral Roberts Golden Eagles": 198,
     "Oregon Ducks": 2483,
@@ -292,6 +297,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Purdue Fort Wayne Mastodons": 2870,
     # --- Q ---
     "Queens Royals": 2801,
+    "Queens University Royals": 2801,
     "Quinnipiac Bobcats": 2514,
     # --- R ---
     "Radford Highlanders": 2515,
@@ -314,6 +320,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Samford Bulldogs": 2535,
     "San Diego Toreros": 301,
     "San Diego State Aztecs": 21,
+    "San Diego St Aztecs": 21,
     "San Francisco Dons": 2539,
     "San Jose State Spartans": 23,
     "Santa Clara Broncos": 2541,
@@ -331,6 +338,7 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "South Dakota State Jackrabbits": 2571,
     "South Florida Bulls": 58,
     "Southeast Missouri State Redhawks": 2546,
+    "SE Missouri St Redhawks": 2546,
     "Southeastern Louisiana Lions": 2545,
     "Southern Jaguars": 2582,
     "Southern Illinois Salukis": 79,
@@ -409,7 +417,9 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "Wake Forest Demon Deacons": 154,
     "Washington Huskies": 264,
     "Washington State Cougars": 265,
+    "Washington St Cougars": 265,
     "Weber State Wildcats": 2692,
+    "West Georgia Wolves": 2698,
     "West Virginia Mountaineers": 277,
     "Western Carolina Catamounts": 2717,
     "Western Illinois Leathernecks": 2710,
@@ -450,6 +460,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Appalachian State Mountaineers": "APP",
     "Arizona Wildcats": "ARIZ",
     "Arizona State Sun Devils": "ASU",
+    "Arizona St Sun Devils": "ASU",
     "Arkansas Razorbacks": "ARK",
     "Arkansas State Red Wolves": "ARST",
     "Arkansas-Little Rock Trojans": "LR",
@@ -537,6 +548,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Florida Gulf Coast Eagles": "FGCU",
     "Florida International Golden Panthers": "FIU",
     "Florida State Seminoles": "FSU",
+    "Florida St Seminoles": "FSU",
     "Fordham Rams": "FOR",
     "Fresno State Bulldogs": "FRES",
     "Furman Paladins": "FUR",
@@ -645,6 +657,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Montana Grizzlies": "MONT",
     "Montana State Bobcats": "MTST",
     "Morehead State Eagles": "MORE",
+    "Morehead St Eagles": "MORE",
     "Morgan State Bears": "MORG",
     "Mount St. Mary's Mountaineers": "MSM",
     "Murray State Racers": "MURR",
@@ -654,6 +667,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "N.C. State Wolfpack": "NCST",
     "Nebraska Cornhuskers": "NEB",
     "Nebraska-Omaha Mavericks": "UNO",
+    "Omaha Mavericks": "UNO",
     "Nevada Wolf Pack": "NEV",
     "New Hampshire Wildcats": "UNH",
     "New Mexico Lobos": "UNM",
@@ -687,6 +701,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Ohio State Buckeyes": "OSU",
     "Oklahoma Sooners": "OU",
     "Oklahoma State Cowboys": "OKST",
+    "Oklahoma St Cowboys": "OKST",
     "Old Dominion Monarchs": "ODU",
     "Oral Roberts Golden Eagles": "ORU",
     "Oregon Ducks": "ORE",
@@ -707,6 +722,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Purdue Fort Wayne Mastodons": "PFW",
     # --- Q ---
     "Queens Royals": "QU",
+    "Queens University Royals": "QU",
     "Quinnipiac Bobcats": "QUIN",
     # --- R ---
     "Radford Highlanders": "RAD",
@@ -729,6 +745,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Samford Bulldogs": "SAM",
     "San Diego Toreros": "USD",
     "San Diego State Aztecs": "SDSU",
+    "San Diego St Aztecs": "SDSU",
     "San Francisco Dons": "USF",
     "San Jose State Spartans": "SJSU",
     "Santa Clara Broncos": "SCU",
@@ -746,6 +763,7 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "South Dakota State Jackrabbits": "SDST",
     "South Florida Bulls": "USF",
     "Southeast Missouri State Redhawks": "SEMO",
+    "SE Missouri St Redhawks": "SEMO",
     "Southeastern Louisiana Lions": "SELA",
     "Southern Jaguars": "SOU",
     "Southern Illinois Salukis": "SIU",
@@ -824,7 +842,9 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     "Wake Forest Demon Deacons": "WAKE",
     "Washington Huskies": "WASH",
     "Washington State Cougars": "WSU",
+    "Washington St Cougars": "WSU",
     "Weber State Wildcats": "WEB",
+    "West Georgia Wolves": "WGEO",
     "West Virginia Mountaineers": "WVU",
     "Western Carolina Catamounts": "WCU",
     "Western Illinois Leathernecks": "WIU",
@@ -854,6 +874,26 @@ _ESPN_LOGO_URL = (
 )
 
 
+def _fuzzy_lookup(name: str, mapping: dict) -> str | None:
+    """Try common Odds API name variants (St↔State, etc.)."""
+    # Try expanding "St" -> "State"
+    if " St " in name:
+        expanded = name.replace(" St ", " State ")
+        if expanded in mapping:
+            return mapping[expanded]
+    # Try contracting "State" -> "St"
+    if " State " in name:
+        contracted = name.replace(" State ", " St ")
+        if contracted in mapping:
+            return mapping[contracted]
+    # Try "SE " -> "Southeast "
+    if name.startswith("SE "):
+        expanded = "Southeast " + name[3:]
+        if expanded in mapping:
+            return mapping[expanded]
+    return None
+
+
 def get_logo_url(odds_api_name: str) -> str:
     """Return the ESPN CDN logo URL for a team, or empty string if unknown.
 
@@ -865,6 +905,8 @@ def get_logo_url(odds_api_name: str) -> str:
         Full ESPN CDN logo URL, or "" if the team is not mapped.
     """
     espn_id = ODDS_API_TO_ESPN_ID.get(odds_api_name)
+    if espn_id is None:
+        espn_id = _fuzzy_lookup(odds_api_name, ODDS_API_TO_ESPN_ID)
     if espn_id is None:
         return ""
     return _ESPN_LOGO_URL.format(id=espn_id)
@@ -881,6 +923,10 @@ def get_abbrev(odds_api_name: str) -> str:
         team name if not explicitly mapped.
     """
     abbrev = ODDS_API_TO_ABBREV.get(odds_api_name)
+    if abbrev is not None:
+        return abbrev
+    # Try fuzzy matching
+    abbrev = _fuzzy_lookup(odds_api_name, ODDS_API_TO_ABBREV)
     if abbrev is not None:
         return abbrev
     # Fallback: first word of team name

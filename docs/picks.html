@@ -29,6 +29,23 @@
     .summary-bar .count { font-weight: 700; color: #1a1a2e; }
     .summary-bar .date { color: #666; }
 
+    /* Date group header */
+    .date-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 20px; margin-bottom: 4px; padding: 0 4px;
+    }
+    .date-header:first-child { margin-top: 0; }
+    .date-header .date-label {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #1a1a2e; white-space: nowrap;
+    }
+    .date-header .date-line {
+      flex: 1; height: 1px; background: #ccc;
+    }
+    .date-header .date-count {
+      font-size: 12px; color: #888; white-space: nowrap;
+    }
+
     /* Table header */
     .table-header {
       display: grid;
@@ -93,6 +110,13 @@
     .pick-logo { width: 28px; height: 28px; object-fit: contain; }
     .pick-text { font-size: 16px; font-weight: 700; color: #1a1a2e; white-space: nowrap; }
 
+    .edge-badge {
+      font-size: 11px; font-weight: 600; color: #666;
+      background: #eee; border-radius: 4px; padding: 1px 6px;
+      margin-left: 4px;
+    }
+    .pick-col.strong .edge-badge { background: #c8ecc8; color: #2d7a2d; }
+
     .no-picks { text-align: center; padding: 40px; color: #888; font-size: 16px; }
     .loading { text-align: center; padding: 60px; color: #888; }
     .loading .spinner {
@@ -105,10 +129,11 @@
     .footer { text-align: center; padding: 24px; font-size: 12px; color: #999; }
 
     @media (max-width: 700px) {
-      .table-header, .game-card { grid-template-columns: 1fr 100px 140px; }
+      .table-header, .game-card { grid-template-columns: 1fr 90px 130px; }
       .team-name { max-width: 120px; font-size: 13px; }
       .pick-text { font-size: 13px; }
       .team-logo { width: 24px; height: 24px; }
+      .edge-badge { display: none; }
     }
   </style>
 </head>
@@ -124,12 +149,6 @@
       <span class="date" id="summary-date"></span>
     </div>
 
-    <div class="table-header">
-      <div>Game Info</div>
-      <div class="col-odds">Current Odds</div>
-      <div class="col-pick">Model Pick</div>
-    </div>
-
     <div id="games-container">
       <div class="loading">
         <div class="spinner"></div>
@@ -143,18 +162,33 @@
   </div>
 
   <script>
-    // Fetch static JSON from GitHub Pages (updated daily by GitHub Actions)
     const API_URL = './data/picks.json';
 
     function formatTime(isoStr) {
       if (!isoStr) return '';
       const d = new Date(isoStr);
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function getDateLabel(isoStr) {
+      if (!isoStr) return 'Unknown';
+      const d = new Date(isoStr);
       const now = new Date();
-      // If game is today, show time
-      if (d.toDateString() === now.toDateString()) {
-        return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      }
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const gameDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const diff = Math.round((gameDay - today) / 86400000);
+
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Tomorrow';
+      if (diff === -1) return 'Yesterday';
+      return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+
+    function getDateKey(isoStr) {
+      if (!isoStr) return '9999-99-99';
+      // Group by local date
+      const d = new Date(isoStr);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
     function fallbackLogo(img) {
@@ -174,37 +208,73 @@
         return;
       }
 
-      let html = '';
+      // Group games by local date
+      const groups = {};
       for (const g of data.games) {
-        const isStrong = Math.abs(g.edge) >= 7;
-        const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
-        const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
-        const totalStr = g.total != null ? `o${g.total}` : '';
+        const key = getDateKey(g.commence_time);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(g);
+      }
 
+      // Sort date keys chronologically
+      const sortedDates = Object.keys(groups).sort();
+
+      let html = '';
+      for (const dateKey of sortedDates) {
+        const dayGames = groups[dateKey];
+        const label = getDateLabel(dayGames[0].commence_time);
+
+        // Sort games within day by time
+        dayGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+
+        // Date group header
         html += `
-          <div class="game-card">
-            <div class="game-info">
-              <div class="team-row">
-                <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
-                <span class="team-name">${g.away_team.toUpperCase()}</span>
-              </div>
-              <div class="team-row">
-                <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
-                <span class="team-name">${g.home_team.toUpperCase()}</span>
-              </div>
-              <div class="game-time">${formatTime(g.commence_time)}</div>
-            </div>
-
-            <div class="odds-col">
-              ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
-              ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
-            </div>
-
-            <div class="${pickClass}">
-              <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
-              <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
-            </div>
+          <div class="date-header">
+            <span class="date-label">${label}</span>
+            <span class="date-line"></span>
+            <span class="date-count">${dayGames.length} pick${dayGames.length !== 1 ? 's' : ''}</span>
           </div>`;
+
+        // Table header for this group
+        html += `
+          <div class="table-header">
+            <div>Game Info</div>
+            <div class="col-odds">Current Odds</div>
+            <div class="col-pick">Model Pick</div>
+          </div>`;
+
+        for (const g of dayGames) {
+          const isStrong = Math.abs(g.edge) >= 7;
+          const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
+          const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
+          const totalStr = g.total != null ? `o${g.total}` : '';
+
+          html += `
+            <div class="game-card">
+              <div class="game-info">
+                <div class="team-row">
+                  <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
+                  <span class="team-name">${g.away_team.toUpperCase()}</span>
+                </div>
+                <div class="team-row">
+                  <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
+                  <span class="team-name">${g.home_team.toUpperCase()}</span>
+                </div>
+                <div class="game-time">${formatTime(g.commence_time)}</div>
+              </div>
+
+              <div class="odds-col">
+                ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
+                ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
+              </div>
+
+              <div class="${pickClass}">
+                <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
+                <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
+                <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
+              </div>
+            </div>`;
+        }
       }
 
       container.innerHTML = html;
@@ -216,7 +286,6 @@
       document.getElementById('summary-count').textContent = 'Error loading picks';
     }
 
-    // Fetch and render
     fetch(API_URL)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(renderGames)
