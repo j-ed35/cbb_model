@@ -401,6 +401,48 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.Dat
     # Sort by absolute edge descending
     games.sort(key=lambda g: abs(g["edge"]), reverse=True)
 
+    # Build all_games list (every game, including those without model data)
+    all_games = []
+    for _, row in pred_df.iterrows():
+        spread = row.get("spread_home")
+        edge = row.get("edge")
+        has_pred = pd.notna(edge)
+
+        game = {
+            "home_team": row["home_team"],
+            "away_team": row["away_team"],
+            "home_abbrev": get_abbrev(row["home_team"]),
+            "away_abbrev": get_abbrev(row["away_team"]),
+            "home_logo": get_logo_url(row["home_team"]),
+            "away_logo": get_logo_url(row["away_team"]),
+            "commence_time": row.get("commence_time", ""),
+            "spread_home": float(spread) if pd.notna(spread) else None,
+            "total": float(row["total"]) if pd.notna(row.get("total")) else None,
+            "pred_margin": round(float(row["pred_margin"]), 1) if has_pred else None,
+            "edge": round(float(edge), 1) if has_pred else None,
+        }
+
+        # Add pick info if this game qualifies
+        if has_pred and abs(edge) >= threshold and abs(edge) <= MAX_EDGE:
+            if edge > 0:
+                pick_team = row["home_team"]
+                pick_spread = f"{spread:+.1f}" if pd.notna(spread) else ""
+            else:
+                pick_team = row["away_team"]
+                pick_spread = f"{-spread:+.1f}" if pd.notna(spread) else ""
+            game["pick_team"] = pick_team
+            game["pick_abbrev"] = get_abbrev(pick_team)
+            game["pick_spread"] = pick_spread
+            game["pick_logo"] = get_logo_url(pick_team)
+
+        if ratings is not None:
+            home_kp = row.get("home_kp", "")
+            away_kp = row.get("away_kp", "")
+            game["home_kenpom"] = _kenpom_profile(row["home_team"], home_kp, ratings)
+            game["away_kenpom"] = _kenpom_profile(row["away_team"], away_kp, ratings)
+
+        all_games.append(game)
+
     return {
         "date": str(date.today()),
         "generated": datetime.now().isoformat(),
@@ -408,6 +450,7 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.Dat
         "total_games": len(pred_df),
         "picks_count": len(games),
         "games": games,
+        "all_games": all_games,
     }
 
 

@@ -3,62 +3,324 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CBB Model Picks - 2026-03-07</title>
+  <title>CBB Model Picks</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f0f2f5; color: #333;
+      background: #f0f2f5;
+      color: #333;
     }
-    .header { background: #1a1a2e; color: white; padding: 20px 0; text-align: center; }
+    .header {
+      background: #1a1a2e;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+    }
     .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
     .header .subtitle { font-size: 13px; color: #8899aa; margin-top: 4px; }
     .container { max-width: 900px; margin: 0 auto; padding: 16px; }
     .summary-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: white; border-radius: 8px; padding: 12px 20px;
-      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-size: 14px;
+      margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-size: 14px; flex-wrap: wrap; gap: 8px;
     }
     .summary-bar .count { font-weight: 700; color: #1a1a2e; }
     .summary-bar .date { color: #666; }
+
+    /* Controls bar */
+    .controls-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: white; border-radius: 8px; padding: 10px 20px;
+      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-size: 13px; flex-wrap: wrap; gap: 8px;
+    }
+    .sort-controls { display: flex; align-items: center; gap: 6px; }
+    .sort-controls label { color: #666; font-weight: 600; }
+    .sort-btn {
+      background: #f0f2f5; border: 1px solid #ddd; border-radius: 6px;
+      padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; color: #555;
+    }
+    .sort-btn:hover { background: #e4e7eb; }
+    .sort-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .legend { display: flex; align-items: center; gap: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666; }
+    .legend-swatch {
+      width: 14px; height: 14px; border-radius: 3px; border: 2px solid;
+    }
+    .legend-swatch.regular { background: #f0f7ff; border-color: #c4ddff; }
+    .legend-swatch.strong { background: #e8f5e8; border-color: #86d486; }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex; gap: 0; margin-bottom: 8px;
+      background: white; border-radius: 8px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 16px; border: none; background: white;
+      font-size: 14px; font-weight: 600; color: #666; cursor: pointer;
+      transition: all 0.15s; border-bottom: 3px solid transparent;
+    }
+    .tab-btn:hover { background: #f8f9fa; }
+    .tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+    .tab-btn .tab-count {
+      font-size: 11px; font-weight: 700; background: #e8ecf0;
+      border-radius: 10px; padding: 1px 7px; margin-left: 6px; color: #666;
+    }
+    .tab-btn.active .tab-count { background: #1a1a2e; color: white; }
+
+    /* Search */
+    .search-bar {
+      background: white; border-radius: 8px; padding: 10px 16px;
+      margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .search-bar input {
+      width: 100%; border: 1px solid #ddd; border-radius: 6px;
+      padding: 8px 12px; font-size: 14px; outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-bar input:focus { border-color: #1a1a2e; }
+    .search-bar input::placeholder { color: #aaa; }
+
+    /* No-pick indicator for all games */
+    .pick-col.no-pick {
+      background: #f5f5f5; border-color: #e0e0e0;
+    }
+    .pick-col.no-pick .pick-text { color: #999; font-weight: 500; font-size: 13px; }
+    .pick-col.has-model {
+      background: #fff8e8; border-color: #e8d8a0;
+    }
+
+    /* Date group header */
+    .date-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 20px; margin-bottom: 4px; padding: 0 4px;
+    }
+    .date-header:first-child { margin-top: 0; }
+    .date-header .date-label {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #1a1a2e; white-space: nowrap;
+    }
+    .date-header .date-line {
+      flex: 1; height: 1px; background: #ccc;
+    }
+    .date-header .date-count {
+      font-size: 12px; color: #888; white-space: nowrap;
+    }
+
+    /* Table header */
     .table-header {
-      display: grid; grid-template-columns: 1fr 200px 220px;
-      background: #e8ecf0; border-radius: 8px 8px 0 0;
-      padding: 10px 16px; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px; color: #667;
+      display: grid;
+      grid-template-columns: 1fr 200px 220px;
+      background: #e8ecf0;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #667;
     }
     .table-header .col-odds { text-align: center; }
     .table-header .col-pick { text-align: center; }
+
+    /* Game card */
     .game-card {
-      display: grid; grid-template-columns: 1fr 200px 220px;
-      background: white; border-bottom: 1px solid #e8ecf0;
-      padding: 12px 16px; align-items: center;
+      display: grid;
+      grid-template-columns: 1fr 200px 220px;
+      background: white;
+      border-bottom: 1px solid #e8ecf0;
+      padding: 12px 16px;
+      align-items: center;
+      transition: background 0.15s;
+      cursor: pointer;
     }
-    .game-card:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
     .game-card:hover { background: #f8f9fa; }
+    .game-card.expanded { background: #f0f4ff; border-bottom: none; }
+
+    /* Game info column */
     .game-info { display: flex; flex-direction: column; gap: 6px; }
     .team-row { display: flex; align-items: center; gap: 10px; }
-    .team-logo { width: 32px; height: 32px; border-radius: 4px; object-fit: contain; background: #f5f5f5; }
-    .team-name { font-size: 15px; font-weight: 600; }
+    .team-logo {
+      width: 32px; height: 32px; border-radius: 4px;
+      object-fit: contain; flex-shrink: 0;
+      background: #f5f5f5;
+    }
+    .team-name {
+      font-size: 15px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 220px;
+    }
     .game-time { font-size: 12px; color: #888; margin-left: 42px; }
+
+    /* Odds column */
     .odds-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .odds-total, .odds-spread {
       font-size: 14px; font-weight: 600; color: #444;
-      background: #f0f2f5; border-radius: 4px; padding: 2px 10px; min-width: 70px; text-align: center;
+      background: #f0f2f5; border-radius: 4px; padding: 2px 10px;
+      min-width: 70px; text-align: center;
     }
+
+    /* Pick column */
     .pick-col {
       display: flex; align-items: center; justify-content: center; gap: 10px;
-      background: #f0f7ff; border-radius: 8px; padding: 8px 12px; border: 2px solid #c4ddff;
+      background: #f0f7ff; border-radius: 8px; padding: 8px 12px;
+      border: 2px solid #c4ddff;
     }
     .pick-col.strong { background: #e8f5e8; border-color: #86d486; }
     .pick-logo { width: 28px; height: 28px; object-fit: contain; }
-    .pick-text { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+    .pick-text { font-size: 16px; font-weight: 700; color: #1a1a2e; white-space: nowrap; }
+
+    .edge-badge {
+      font-size: 11px; font-weight: 600; color: #666;
+      background: #eee; border-radius: 4px; padding: 1px 6px;
+      margin-left: 4px;
+    }
+    .pick-col.strong .edge-badge { background: #c8ecc8; color: #2d7a2d; }
+
     .no-picks { text-align: center; padding: 40px; color: #888; font-size: 16px; }
+    .loading { text-align: center; padding: 60px; color: #888; }
+    .loading .spinner {
+      display: inline-block; width: 32px; height: 32px;
+      border: 3px solid #ddd; border-top-color: #1a1a2e;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error { text-align: center; padding: 40px; color: #c00; }
     .footer { text-align: center; padding: 24px; font-size: 12px; color: #999; }
+
+    /* ─── Detail Panel ─── */
+    .game-detail {
+      background: #fafbfd;
+      border-bottom: 1px solid #e8ecf0;
+      padding: 0 16px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+    }
+    .game-detail.open {
+      max-height: 2000px;
+      padding: 20px 16px;
+    }
+    .detail-loading {
+      text-align: center; padding: 20px; color: #888; font-size: 13px;
+    }
+    .detail-loading .mini-spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #ddd; border-top-color: #1a1a2e;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+
+    /* Model callout */
+    .model-callout {
+      background: #1a1a2e; color: white; border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 18px;
+      font-size: 14px; line-height: 1.5;
+    }
+    .model-callout .callout-main { font-weight: 600; font-size: 15px; }
+    .model-callout .callout-sub { color: #99aabb; font-size: 13px; margin-top: 4px; }
+
+    /* Section headers */
+    .detail-section { margin-bottom: 18px; }
+    .detail-section:last-child { margin-bottom: 0; }
+    .section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #889; margin-bottom: 8px;
+    }
+
+    /* KenPom comparison table */
+    .kp-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; background: white;
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .kp-table th, .kp-table td {
+      padding: 8px 12px; text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .kp-table th { font-weight: 700; background: #f5f7fa; }
+    .kp-table th:first-child, .kp-table td:first-child {
+      text-align: left; font-weight: 600; color: #667;
+    }
+    .kp-table .better { color: #16a34a; font-weight: 700; }
+
+    /* Recent form */
+    .form-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 6px; flex-wrap: wrap;
+    }
+    .form-team-label {
+      font-size: 13px; font-weight: 700; min-width: 50px;
+    }
+    .form-pills { display: flex; gap: 3px; flex-wrap: wrap; }
+    .form-pill {
+      display: inline-block; width: 26px; height: 26px; line-height: 26px;
+      text-align: center; border-radius: 4px; font-size: 11px; font-weight: 700;
+      color: white; cursor: default; position: relative;
+    }
+    .form-pill.win { background: #16a34a; }
+    .form-pill.loss { background: #dc2626; }
+    .form-pill-tooltip {
+      display: none; position: absolute; bottom: 110%; left: 50%;
+      transform: translateX(-50%); background: #333; color: white;
+      padding: 4px 8px; border-radius: 4px; font-size: 11px;
+      white-space: nowrap; z-index: 10; font-weight: 400;
+    }
+    .form-pill:hover .form-pill-tooltip { display: block; }
+    .form-summary {
+      font-size: 12px; color: #888; margin-left: 4px;
+    }
+
+    /* Matchups */
+    .matchup-item {
+      background: white; border-radius: 6px; padding: 10px 14px;
+      margin-bottom: 6px; font-size: 13px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .matchup-date { color: #888; font-size: 12px; }
+    .matchup-score { font-weight: 700; }
+    .matchup-venue { color: #888; font-size: 12px; }
+    .no-data { color: #999; font-size: 13px; font-style: italic; }
+
+    /* Roster grid */
+    .roster-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .roster-col h4 {
+      font-size: 13px; font-weight: 700; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .roster-col h4 img { width: 24px; height: 24px; object-fit: contain; }
+    .player-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    .player-item:last-child { border-bottom: none; }
+    .player-img {
+      width: 36px; height: 36px; border-radius: 50%;
+      object-fit: cover; background: #eee; flex-shrink: 0;
+    }
+    .player-info { flex: 1; min-width: 0; }
+    .player-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-meta { font-size: 11px; color: #888; }
+
     @media (max-width: 700px) {
-      .table-header, .game-card { grid-template-columns: 1fr 100px 140px; }
+      .table-header, .game-card { grid-template-columns: 1fr 90px 130px; }
       .team-name { max-width: 120px; font-size: 13px; }
       .pick-text { font-size: 13px; }
+      .team-logo { width: 24px; height: 24px; }
+      .edge-badge { display: none; }
+      .roster-grid { grid-template-columns: 1fr; }
+      .kp-table { font-size: 12px; }
+      .kp-table th, .kp-table td { padding: 6px 8px; }
+      .controls-bar { padding: 8px 12px; }
+      .legend { display: none; }
     }
   </style>
 </head>
@@ -67,25 +329,402 @@
     <h1>CBB MODEL PICKS</h1>
     <div class="subtitle">Against the Spread</div>
   </div>
+
   <div class="container">
     <div class="summary-bar">
-      <span class="count" id="summary-count"></span>
+      <span class="count" id="summary-count">Loading...</span>
       <span class="date" id="summary-date"></span>
     </div>
-    <div class="table-header">
-      <div>Game Info</div>
-      <div class="col-odds">Current Odds</div>
-      <div class="col-pick">Model Pick</div>
-    </div>
-    <div id="games-container"></div>
-  </div>
-  <div class="footer">
-    Model: GBM trained on KenPom ratings (2022-2026) | Generated: 2026-03-07 10:56
-  </div>
-  <script>
-    const DATA = {"date": "2026-03-07", "generated": "2026-03-07T10:56:49.694493", "threshold": 4.5, "total_games": 92, "picks_count": 17, "games": [{"home_team": "Colorado Buffaloes", "away_team": "Arizona Wildcats", "home_abbrev": "COLO", "away_abbrev": "ARIZ", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/38.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/12.png&w=40&h=40", "commence_time": "2026-03-08T04:00:00Z", "spread_home": 14.5, "total": 156.5, "pred_margin": -3.1, "edge": 11.4, "pick_team": "Colorado Buffaloes", "pick_abbrev": "COLO", "pick_spread": "+14.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/38.png&w=40&h=40"}, {"home_team": "Dartmouth Big Green", "away_team": "Cornell Big Red", "home_abbrev": "DART", "away_abbrev": "COR", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/159.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/172.png&w=40&h=40", "commence_time": "2026-03-07T19:00:00Z", "spread_home": 5.0, "total": 165.5, "pred_margin": 2.9, "edge": 7.9, "pick_team": "Dartmouth Big Green", "pick_abbrev": "DART", "pick_spread": "+5.0", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/159.png&w=40&h=40"}, {"home_team": "Austin Peay Governors", "away_team": "Queens University Royals", "home_abbrev": "APSU", "away_abbrev": "QU", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2046.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2801.png&w=40&h=40", "commence_time": "2026-03-08T00:30:22Z", "spread_home": -1.5, "total": 161.5, "pred_margin": 9.4, "edge": 7.9, "pick_team": "Austin Peay Governors", "pick_abbrev": "APSU", "pick_spread": "-1.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2046.png&w=40&h=40"}, {"home_team": "UIC Flames", "away_team": "Drake Bulldogs", "home_abbrev": "UIC", "away_abbrev": "DRKE", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/82.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2181.png&w=40&h=40", "commence_time": "2026-03-07T20:30:00Z", "spread_home": -5.5, "total": 140.5, "pred_margin": 13.1, "edge": 7.6, "pick_team": "UIC Flames", "pick_abbrev": "UIC", "pick_spread": "-5.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/82.png&w=40&h=40"}, {"home_team": "East Tennessee St Buccaneers", "away_team": "The Citadel Bulldogs", "home_abbrev": "East", "away_abbrev": "CIT", "home_logo": "", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2643.png&w=40&h=40", "commence_time": "2026-03-07T17:00:05Z", "spread_home": -15.5, "total": 139.5, "pred_margin": 22.8, "edge": 7.3, "pick_team": "East Tennessee St Buccaneers", "pick_abbrev": "East", "pick_spread": "-15.5", "pick_logo": ""}, {"home_team": "Iowa State Cyclones", "away_team": "Arizona St Sun Devils", "home_abbrev": "ISU", "away_abbrev": "ASU", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/66.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/9.png&w=40&h=40", "commence_time": "2026-03-07T19:00:00Z", "spread_home": -15.5, "total": 147.5, "pred_margin": 8.6, "edge": -6.9, "pick_team": "Arizona St Sun Devils", "pick_abbrev": "ASU", "pick_spread": "+15.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/9.png&w=40&h=40"}, {"home_team": "UMBC Retrievers", "away_team": "New Hampshire Wildcats", "home_abbrev": "UMBC", "away_abbrev": "UNH", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2378.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/160.png&w=40&h=40", "commence_time": "2026-03-07T18:00:00Z", "spread_home": -14.0, "total": 139.0, "pred_margin": 7.2, "edge": -6.8, "pick_team": "New Hampshire Wildcats", "pick_abbrev": "UNH", "pick_spread": "+14.0", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/160.png&w=40&h=40"}, {"home_team": "St. Bonaventure Bonnies", "away_team": "Davidson Wildcats", "home_abbrev": "SBU", "away_abbrev": "DAV", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/179.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2166.png&w=40&h=40", "commence_time": "2026-03-07T17:00:00Z", "spread_home": -4.5, "total": 142.0, "pred_margin": -1.9, "edge": -6.4, "pick_team": "Davidson Wildcats", "pick_abbrev": "DAV", "pick_spread": "+4.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2166.png&w=40&h=40"}, {"home_team": "LSU Tigers", "away_team": "Texas A&M Aggies", "home_abbrev": "LSU", "away_abbrev": "TAMU", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/99.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/245.png&w=40&h=40", "commence_time": "2026-03-07T23:00:00Z", "spread_home": 4.5, "total": 159.5, "pred_margin": 1.9, "edge": 6.4, "pick_team": "LSU Tigers", "pick_abbrev": "LSU", "pick_spread": "+4.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/99.png&w=40&h=40"}, {"home_team": "Oklahoma St Cowboys", "away_team": "Houston Cougars", "home_abbrev": "OKST", "away_abbrev": "HOU", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/197.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/248.png&w=40&h=40", "commence_time": "2026-03-07T17:00:00Z", "spread_home": 13.5, "total": 146.5, "pred_margin": -7.3, "edge": 6.2, "pick_team": "Oklahoma St Cowboys", "pick_abbrev": "OKST", "pick_spread": "+13.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/197.png&w=40&h=40"}, {"home_team": "Liberty Flames", "away_team": "Sam Houston St Bearkats", "home_abbrev": "LIB", "away_abbrev": "SHSU", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2335.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2534.png&w=40&h=40", "commence_time": "2026-03-07T19:00:00Z", "spread_home": -4.5, "total": 155.0, "pred_margin": -1.4, "edge": -5.9, "pick_team": "Sam Houston St Bearkats", "pick_abbrev": "SHSU", "pick_spread": "+4.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2534.png&w=40&h=40"}, {"home_team": "Yale Bulldogs", "away_team": "Princeton Tigers", "home_abbrev": "YALE", "away_abbrev": "PRIN", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/43.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/163.png&w=40&h=40", "commence_time": "2026-03-07T19:00:00Z", "spread_home": -14.0, "total": 136.0, "pred_margin": 8.1, "edge": -5.9, "pick_team": "Princeton Tigers", "pick_abbrev": "PRIN", "pick_spread": "+14.0", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/163.png&w=40&h=40"}, {"home_team": "Stony Brook Seawolves", "away_team": "Campbell Fighting Camels", "home_abbrev": "STON", "away_abbrev": "CAMP", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2619.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2097.png&w=40&h=40", "commence_time": "2026-03-07T17:00:00Z", "spread_home": 2.5, "total": 148.5, "pred_margin": 2.9, "edge": 5.4, "pick_team": "Stony Brook Seawolves", "pick_abbrev": "STON", "pick_spread": "+2.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2619.png&w=40&h=40"}, {"home_team": "Drexel Dragons", "away_team": "Northeastern Huskies", "home_abbrev": "DREX", "away_abbrev": "NEU", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2182.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/111.png&w=40&h=40", "commence_time": "2026-03-07T19:30:00Z", "spread_home": -5.5, "total": 140.5, "pred_margin": 10.8, "edge": 5.3, "pick_team": "Drexel Dragons", "pick_abbrev": "DREX", "pick_spread": "-5.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2182.png&w=40&h=40"}, {"home_team": "Oregon Ducks", "away_team": "Washington Huskies", "home_abbrev": "ORE", "away_abbrev": "WASH", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2483.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/264.png&w=40&h=40", "commence_time": "2026-03-08T04:00:59Z", "spread_home": -1.5, "total": 142.5, "pred_margin": -3.7, "edge": -5.2, "pick_team": "Washington Huskies", "pick_abbrev": "WASH", "pick_spread": "+1.5", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/264.png&w=40&h=40"}, {"home_team": "High Point Panthers", "away_team": "UNC Asheville Bulldogs", "home_abbrev": "HPU", "away_abbrev": "UNC", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2272.png&w=40&h=40", "away_logo": "", "commence_time": "2026-03-07T17:00:26Z", "spread_home": -13.5, "total": 148.5, "pred_margin": 8.5, "edge": -5.0, "pick_team": "UNC Asheville Bulldogs", "pick_abbrev": "UNC", "pick_spread": "+13.5", "pick_logo": ""}, {"home_team": "UTEP Miners", "away_team": "Jacksonville St Gamecocks", "home_abbrev": "UTEP", "away_abbrev": "JVST", "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2638.png&w=40&h=40", "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/55.png&w=40&h=40", "commence_time": "2026-03-07T20:00:00Z", "spread_home": 1.0, "total": 137.0, "pred_margin": 3.8, "edge": 4.8, "pick_team": "UTEP Miners", "pick_abbrev": "UTEP", "pick_spread": "+1.0", "pick_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2638.png&w=40&h=40"}]};
 
-    function fallbackLogo(img) { img.style.display = 'none'; }
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="picks" onclick="setTab('picks')">
+        Model Picks<span class="tab-count" id="picks-tab-count">0</span>
+      </button>
+      <button class="tab-btn" data-tab="all" onclick="setTab('all')">
+        All Games<span class="tab-count" id="all-tab-count">0</span>
+      </button>
+    </div>
+
+    <div id="picks-controls" class="controls-bar">
+      <div class="sort-controls">
+        <label>Sort:</label>
+        <button class="sort-btn active" data-sort="edge" onclick="setSort('edge')">Best Edge</button>
+        <button class="sort-btn" data-sort="time" onclick="setSort('time')">Game Time</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-swatch regular"></span>
+          <span>Pick (edge 4.5-7)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-swatch strong"></span>
+          <span>Strong Pick (edge 7+)</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="all-controls" class="controls-bar" style="display:none">
+      <div class="sort-controls">
+        <label>Sort:</label>
+        <button class="sort-btn active" data-sort="all-time" onclick="setAllSort('all-time')">Game Time</button>
+        <button class="sort-btn" data-sort="all-edge" onclick="setAllSort('all-edge')">Best Edge</button>
+      </div>
+    </div>
+
+    <div id="search-container" class="search-bar" style="display:none">
+      <input type="text" id="search-input" placeholder="Search teams..." oninput="handleSearch()">
+    </div>
+
+    <div id="games-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p style="margin-top:12px">Fetching today's picks...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Model: GBM trained on KenPom ratings (2022-2026) | Data: KenPom + The Odds API
+  </div>
+
+  <script>
+    const API_URL = './data/picks.json';
+
+    // ─── State ───
+    let picksData = null;
+    let currentTab = 'picks';
+    let currentSort = 'edge';
+    let allSort = 'all-time';
+    let searchQuery = '';
+    let currentExpanded = null;
+    const detailCache = {};  // key -> html string
+    const espnCache = {};
+
+    // ─── ESPN API ───
+
+    async function fetchESPN(path) {
+      if (espnCache[path]) return espnCache[path];
+      try {
+        const r = await fetch(`https://site.api.espn.com${path}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        espnCache[path] = data;
+        return data;
+      } catch (e) {
+        console.warn('ESPN API error:', path, e);
+        return null;
+      }
+    }
+
+    function fetchTeamSchedule(espnId) {
+      return fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${espnId}/schedule`);
+    }
+    function fetchTeamRoster(espnId) {
+      return fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${espnId}`);
+    }
+
+    // ─── Data Parsers ───
+
+    function getRecentForm(schedData, n = 10) {
+      if (!schedData || !schedData.events) return [];
+      const completed = schedData.events
+        .filter(e => e.competitions && e.competitions[0] && e.competitions[0].status &&
+                     e.competitions[0].status.type && e.competitions[0].status.type.completed)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, n)
+        .reverse();
+
+      return completed.map(e => {
+        const comp = e.competitions[0];
+        const teams = comp.competitors || [];
+        const teamEntry = teams.find(t => t.id === String(schedData.team?.id));
+        const oppEntry = teams.find(t => t.id !== String(schedData.team?.id));
+        const won = teamEntry ? teamEntry.winner : false;
+        const teamScore = teamEntry ? (teamEntry.score?.displayValue || teamEntry.score || '?') : '?';
+        const oppScore = oppEntry ? (oppEntry.score?.displayValue || oppEntry.score || '?') : '?';
+        const oppName = oppEntry ? (oppEntry.team?.abbreviation || oppEntry.team?.shortDisplayName || '?') : '?';
+        return { won, teamScore, oppScore, oppName, date: e.date };
+      });
+    }
+
+    function findMatchups(schedData, oppEspnId) {
+      if (!schedData || !schedData.events || !oppEspnId) return [];
+      return schedData.events.filter(e => {
+        if (!e.competitions || !e.competitions[0]) return false;
+        const comp = e.competitions[0];
+        if (!comp.status || !comp.status.type || !comp.status.type.completed) return false;
+        const teams = comp.competitors || [];
+        return teams.some(t => String(t.id) === String(oppEspnId));
+      }).map(e => {
+        const comp = e.competitions[0];
+        const teams = comp.competitors || [];
+        const home = teams.find(t => t.homeAway === 'home');
+        const away = teams.find(t => t.homeAway === 'away');
+        return {
+          date: e.date,
+          homeName: home?.team?.displayName || home?.team?.shortDisplayName || '?',
+          homeScore: home?.score?.displayValue || home?.score || '?',
+          awayName: away?.team?.displayName || away?.team?.shortDisplayName || '?',
+          awayScore: away?.score?.displayValue || away?.score || '?',
+          venue: comp.venue ? comp.venue.fullName : '',
+          city: comp.venue && comp.venue.address ? `${comp.venue.address.city || ''}, ${comp.venue.address.state || ''}` : '',
+        };
+      }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    function parseRoster(teamData) {
+      if (!teamData || !teamData.team || !teamData.team.athletes) return [];
+      return teamData.team.athletes.slice(0, 8).map(a => ({
+        name: a.displayName || a.fullName || '?',
+        number: a.jersey || '',
+        position: a.position?.abbreviation || '',
+        year: a.experience?.abbreviation || '',
+        height: a.displayHeight || '',
+        headshot: a.headshot ? a.headshot.href : null,
+      }));
+    }
+
+    // ─── Renderers ───
+
+    function renderModelCallout(game) {
+      const homeAbbrev = game.home_abbrev;
+      const awayAbbrev = game.away_abbrev;
+      const margin = game.pred_margin;
+      const edge = game.edge;
+      const spread = game.spread_home;
+
+      let predSide, predPts;
+      if (margin > 0) {
+        predSide = homeAbbrev;
+        predPts = Math.abs(margin);
+      } else {
+        predSide = awayAbbrev;
+        predPts = Math.abs(margin);
+      }
+
+      const edgeAbs = Math.abs(edge);
+      const pickSide = game.pick_abbrev;
+      const pickSpread = game.pick_spread;
+
+      return `<div class="model-callout">
+        <div class="callout-main">Model predicts ${predSide} by ${predPts.toFixed(1)} pts &rarr; Take ${pickSide} ${pickSpread}</div>
+        <div class="callout-sub">Edge: ${edgeAbs.toFixed(1)} pts (model thinks the line is off by ${edgeAbs.toFixed(1)})</div>
+      </div>`;
+    }
+
+    function renderKenpomTable(game) {
+      const hk = game.home_kenpom;
+      const ak = game.away_kenpom;
+      if (!hk && !ak) return '<div class="no-data">KenPom data not available for this game</div>';
+
+      const rows = [
+        ['KP Rank', hk?.rank, ak?.rank, 'lower'],
+        ['AdjEM', hk?.adj_em, ak?.adj_em, 'higher'],
+        ['Adj Off', hk?.adj_oe, ak?.adj_oe, 'higher', hk?.adj_oe_rank, ak?.adj_oe_rank],
+        ['Adj Def', hk?.adj_de, ak?.adj_de, 'lower', hk?.adj_de_rank, ak?.adj_de_rank],
+        ['Tempo', hk?.adj_tempo, ak?.adj_tempo, null, hk?.adj_tempo_rank, ak?.adj_tempo_rank],
+        ['Record', hk?.record, ak?.record, null],
+        ['Conference', hk?.conference, ak?.conference, null],
+      ];
+
+      let html = `<table class="kp-table">
+        <tr><th></th><th>${game.home_abbrev}</th><th>${game.away_abbrev}</th></tr>`;
+
+      for (const [label, hv, av, betterDir, hRank, aRank] of rows) {
+        let hClass = '', aClass = '';
+        if (betterDir && hv != null && av != null) {
+          if (betterDir === 'higher') {
+            if (hv > av) hClass = 'better'; else if (av > hv) aClass = 'better';
+          } else {
+            if (hv < av) hClass = 'better'; else if (av < hv) aClass = 'better';
+          }
+        }
+        const hStr = hv != null ? (hRank != null ? `${hv} (${hRank})` : hv) : '-';
+        const aStr = av != null ? (aRank != null ? `${av} (${aRank})` : av) : '-';
+        html += `<tr><td>${label}</td><td class="${hClass}">${hStr}</td><td class="${aClass}">${aStr}</td></tr>`;
+      }
+      html += '</table>';
+      return html;
+    }
+
+    function renderRecentForm(abbrev, formData) {
+      if (!formData || formData.length === 0) return '';
+      const wins = formData.filter(f => f.won).length;
+      const losses = formData.length - wins;
+
+      let pills = '';
+      for (const f of formData) {
+        const cls = f.won ? 'win' : 'loss';
+        const lbl = f.won ? 'W' : 'L';
+        const tip = `${f.won ? 'W' : 'L'} ${f.teamScore}-${f.oppScore} vs ${f.oppName}`;
+        pills += `<span class="form-pill ${cls}">${lbl}<span class="form-pill-tooltip">${tip}</span></span>`;
+      }
+
+      return `<div class="form-row">
+        <span class="form-team-label">${abbrev}</span>
+        <span class="form-pills">${pills}</span>
+        <span class="form-summary">${wins}-${losses} L${formData.length}</span>
+      </div>`;
+    }
+
+    function renderMatchups(matchups) {
+      if (!matchups || matchups.length === 0) return '<div class="no-data">No previous meetings this season</div>';
+      let html = '';
+      for (const m of matchups) {
+        const d = new Date(m.date);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const venueStr = m.venue ? ` (${m.city || m.venue})` : '';
+        html += `<div class="matchup-item">
+          <span class="matchup-date">${dateStr}:</span>
+          <span class="matchup-score">${m.awayName} ${m.awayScore}, ${m.homeName} ${m.homeScore}</span>
+          <span class="matchup-venue">${venueStr}</span>
+        </div>`;
+      }
+      return html;
+    }
+
+    function renderRoster(label, logo, players) {
+      if (!players || players.length === 0) return '';
+      let html = `<div class="roster-col"><h4><img src="${logo}" alt="" onerror="fallbackLogo(this)">${label}</h4>`;
+      for (const p of players) {
+        const img = p.headshot
+          ? `<img class="player-img" src="${p.headshot}" alt="" onerror="this.style.display='none'">`
+          : `<div class="player-img" style="background:#ddd"></div>`;
+        html += `<div class="player-item">
+          ${img}
+          <div class="player-info">
+            <div class="player-name">${p.number ? '#' + p.number + ' ' : ''}${p.name}</div>
+            <div class="player-meta">${[p.position, p.year, p.height].filter(Boolean).join(' | ')}</div>
+          </div>
+        </div>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    // ─── Expand / Collapse ───
+
+    async function toggleGameDetail(detailKey, source) {
+      const detailEl = document.getElementById(`detail-${detailKey}`);
+      const cardEl = document.getElementById(`card-${detailKey}`);
+      if (!detailEl || !cardEl) return;
+
+      // Collapse current if open and different
+      if (currentExpanded !== null && currentExpanded !== detailKey) {
+        const prevDetail = document.getElementById(`detail-${currentExpanded}`);
+        const prevCard = document.getElementById(`card-${currentExpanded}`);
+        if (prevDetail) prevDetail.classList.remove('open');
+        if (prevCard) prevCard.classList.remove('expanded');
+      }
+
+      // Toggle this one
+      if (currentExpanded === detailKey) {
+        detailEl.classList.remove('open');
+        cardEl.classList.remove('expanded');
+        currentExpanded = null;
+        return;
+      }
+
+      currentExpanded = detailKey;
+      cardEl.classList.add('expanded');
+      detailEl.classList.add('open');
+
+      // If already loaded from cache, restore and done
+      if (detailCache[detailKey]) {
+        detailEl.innerHTML = detailCache[detailKey];
+        return;
+      }
+
+      // Get the game data from the right source
+      const gameList = source === 'all' ? picksData.all_games : picksData.games;
+      const idx = parseInt(detailKey.replace(/^(pick|all)-/, ''));
+      const game = gameList[idx];
+      if (!game) {
+        detailEl.innerHTML = '<div class="no-data">Game data not found</div>';
+        return;
+      }
+
+      const homeId = game.home_espn_id;
+      const awayId = game.away_espn_id;
+
+      // Show loading
+      detailEl.innerHTML = '<div class="detail-loading"><span class="mini-spinner"></span> Loading scouting data...</div>';
+
+      // Build content
+      let html = '';
+
+      // Model callout only if this game has a pick
+      if (game.pick_team) {
+        html += renderModelCallout(game);
+      } else if (game.pred_margin != null) {
+        const side = game.pred_margin > 0 ? game.home_abbrev : game.away_abbrev;
+        const pts = Math.abs(game.pred_margin);
+        html += `<div class="model-callout">
+          <div class="callout-main">Model predicts ${side} by ${pts.toFixed(1)} pts</div>
+          <div class="callout-sub">${game.edge != null ? `Edge: ${Math.abs(game.edge).toFixed(1)} pts (below threshold)` : 'No spread available'}</div>
+        </div>`;
+      }
+
+      // KenPom section
+      html += `<div class="detail-section">
+        <div class="section-title">KenPom Comparison</div>
+        ${renderKenpomTable(game)}
+      </div>`;
+
+      // Fetch ESPN data if IDs available
+      if (homeId || awayId) {
+        let homeSchedData = null, awaySchedData = null;
+        let homeTeamData = null, awayTeamData = null;
+
+        const promises = [];
+        promises.push(homeId ? fetchTeamSchedule(homeId) : Promise.resolve(null));
+        promises.push(homeId ? fetchTeamRoster(homeId) : Promise.resolve(null));
+        promises.push(awayId ? fetchTeamSchedule(awayId) : Promise.resolve(null));
+        promises.push(awayId ? fetchTeamRoster(awayId) : Promise.resolve(null));
+
+        try {
+          [homeSchedData, homeTeamData, awaySchedData, awayTeamData] = await Promise.all(promises);
+        } catch (e) {
+          console.warn('ESPN fetch error:', e);
+        }
+
+        // Previous Matchups
+        const matchups = homeSchedData ? findMatchups(homeSchedData, awayId) : [];
+        html += `<div class="detail-section">
+          <div class="section-title">Previous Matchups</div>
+          ${renderMatchups(matchups)}
+        </div>`;
+
+        // Recent Form
+        const homeForm = getRecentForm(homeSchedData, 10);
+        const awayForm = getRecentForm(awaySchedData, 10);
+        if (homeForm.length > 0 || awayForm.length > 0) {
+          html += `<div class="detail-section">
+            <div class="section-title">Recent Form (Last 10)</div>
+            ${renderRecentForm(game.home_abbrev, homeForm)}
+            ${renderRecentForm(game.away_abbrev, awayForm)}
+          </div>`;
+        }
+
+        // Roster
+        const homePlayers = parseRoster(homeTeamData);
+        const awayPlayers = parseRoster(awayTeamData);
+        if (homePlayers.length > 0 || awayPlayers.length > 0) {
+          html += `<div class="detail-section">
+            <div class="section-title">Key Players</div>
+            <div class="roster-grid">
+              ${renderRoster(game.home_abbrev, game.home_logo, homePlayers)}
+              ${renderRoster(game.away_abbrev, game.away_logo, awayPlayers)}
+            </div>
+          </div>`;
+        }
+      }
+
+      detailEl.innerHTML = html;
+      detailCache[detailKey] = html;
+    }
+
+    // ─── Utility Functions ───
 
     function formatTime(isoStr) {
       if (!isoStr) return '';
@@ -93,45 +732,314 @@
       return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     }
 
-    document.getElementById('summary-date').textContent = DATA.date;
-    document.getElementById('summary-count').textContent =
-      DATA.picks_count + ' picks from ' + DATA.total_games + ' games';
+    function getDateLabel(isoStr) {
+      if (!isoStr) return 'Unknown';
+      const d = new Date(isoStr);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const gameDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const diff = Math.round((gameDay - today) / 86400000);
 
-    const container = document.getElementById('games-container');
-    if (!DATA.games.length) {
-      container.innerHTML = '<div class="no-picks">No model picks today.</div>';
-    } else {
-      let html = '';
-      for (const g of DATA.games) {
-        const isStrong = Math.abs(g.edge) >= 7;
-        const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
-        const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? '+' + g.spread_home : '' + g.spread_home) : '';
-        const totalStr = g.total != null ? 'o' + g.total : '';
-        html += `
-          <div class="game-card">
-            <div class="game-info">
-              <div class="team-row">
-                <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
-                <span class="team-name">${g.away_team.toUpperCase()}</span>
-              </div>
-              <div class="team-row">
-                <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
-                <span class="team-name">${g.home_team.toUpperCase()}</span>
-              </div>
-              <div class="game-time">${formatTime(g.commence_time)}</div>
-            </div>
-            <div class="odds-col">
-              ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
-              ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
-            </div>
-            <div class="${pickClass}">
-              <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
-              <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
-            </div>
-          </div>`;
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Tomorrow';
+      if (diff === -1) return 'Yesterday';
+      return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+
+    function getDateKey(isoStr) {
+      if (!isoStr) return '9999-99-99';
+      const d = new Date(isoStr);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function fallbackLogo(img) {
+      img.style.display = 'none';
+    }
+
+    // ─── Tab + Sort ───
+
+    function setTab(tab) {
+      currentTab = tab;
+      currentExpanded = null;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.getElementById('picks-controls').style.display = tab === 'picks' ? '' : 'none';
+      document.getElementById('all-controls').style.display = tab === 'all' ? '' : 'none';
+      document.getElementById('search-container').style.display = tab === 'all' ? '' : 'none';
+      if (picksData) renderCurrentView();
+    }
+
+    function setSort(mode) {
+      currentSort = mode;
+      currentExpanded = null;
+      document.querySelectorAll('#picks-controls .sort-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-sort="${mode}"]`).classList.add('active');
+      if (picksData) renderCurrentView();
+    }
+
+    function setAllSort(mode) {
+      allSort = mode;
+      currentExpanded = null;
+      document.querySelectorAll('#all-controls .sort-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-sort="${mode}"]`).classList.add('active');
+      if (picksData) renderCurrentView();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+      currentExpanded = null;
+      if (picksData) renderCurrentView();
+    }
+
+    function renderCurrentView() {
+      if (currentTab === 'picks') {
+        renderPicksView();
+      } else {
+        renderAllGamesView();
       }
+    }
+
+    // ─── Picks View ───
+
+    function renderPicksView() {
+      const container = document.getElementById('games-container');
+      const games = picksData.games || [];
+
+      if (games.length === 0) {
+        container.innerHTML = '<div class="no-picks">No model picks today. Check back tomorrow.</div>';
+        return;
+      }
+
+      const indexed = games.map((g, i) => ({ game: g, origIdx: i }));
+
+      if (currentSort === 'time') {
+        indexed.sort((a, b) => new Date(a.game.commence_time) - new Date(b.game.commence_time));
+      } else {
+        indexed.sort((a, b) => Math.abs(b.game.edge) - Math.abs(a.game.edge));
+      }
+
+      if (currentSort === 'time') {
+        const groups = {};
+        for (const item of indexed) {
+          const key = getDateKey(item.game.commence_time);
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(item);
+        }
+
+        const sortedDates = Object.keys(groups).sort();
+        let html = '';
+
+        for (const dateKey of sortedDates) {
+          const dayItems = groups[dateKey];
+          const label = getDateLabel(dayItems[0].game.commence_time);
+
+          html += `
+            <div class="date-header">
+              <span class="date-label">${label}</span>
+              <span class="date-line"></span>
+              <span class="date-count">${dayItems.length} pick${dayItems.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="table-header">
+              <div>Game Info</div>
+              <div class="col-odds">Current Odds</div>
+              <div class="col-pick">Model Pick</div>
+            </div>`;
+
+          for (const item of dayItems) {
+            html += renderPickCard(item.game, item.origIdx);
+          }
+        }
+        container.innerHTML = html;
+      } else {
+        let html = `
+          <div class="table-header">
+            <div>Game Info</div>
+            <div class="col-odds">Current Odds</div>
+            <div class="col-pick">Model Pick</div>
+          </div>`;
+        for (const item of indexed) {
+          html += renderPickCard(item.game, item.origIdx);
+        }
+        container.innerHTML = html;
+      }
+    }
+
+    function renderPickCard(g, idx) {
+      const key = `pick-${idx}`;
+      const isStrong = Math.abs(g.edge) >= 7;
+      const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
+      const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
+      const totalStr = g.total != null ? `o${g.total}` : '';
+
+      return `
+        <div class="game-card" id="card-${key}" onclick="toggleGameDetail('${key}','picks')">
+          <div class="game-info">
+            <div class="team-row">
+              <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
+              <span class="team-name">${g.away_team.toUpperCase()}</span>
+            </div>
+            <div class="team-row">
+              <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
+              <span class="team-name">${g.home_team.toUpperCase()}</span>
+            </div>
+            <div class="game-time">${formatTime(g.commence_time)}</div>
+          </div>
+          <div class="odds-col">
+            ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
+            ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
+          </div>
+          <div class="${pickClass}">
+            <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
+            <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
+            <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
+          </div>
+        </div>
+        <div class="game-detail" id="detail-${key}"></div>`;
+    }
+
+    // ─── All Games View ───
+
+    function renderAllGamesView() {
+      const container = document.getElementById('games-container');
+      let games = (picksData.all_games || []).map((g, i) => ({ game: g, origIdx: i }));
+
+      // Filter by search
+      if (searchQuery) {
+        games = games.filter(item => {
+          const g = item.game;
+          const text = `${g.home_team} ${g.away_team} ${g.home_abbrev} ${g.away_abbrev}`.toLowerCase();
+          return text.includes(searchQuery);
+        });
+      }
+
+      // Sort
+      if (allSort === 'all-edge') {
+        games.sort((a, b) => {
+          const ae = a.game.edge != null ? Math.abs(a.game.edge) : -1;
+          const be = b.game.edge != null ? Math.abs(b.game.edge) : -1;
+          return be - ae;
+        });
+      } else {
+        games.sort((a, b) => new Date(a.game.commence_time || '9999') - new Date(b.game.commence_time || '9999'));
+      }
+
+      if (games.length === 0) {
+        container.innerHTML = '<div class="no-picks">No games match your search.</div>';
+        return;
+      }
+
+      // Group by date
+      const groups = {};
+      for (const item of games) {
+        const key = getDateKey(item.game.commence_time);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(item);
+      }
+
+      const sortedDates = allSort === 'all-edge' ? ['all'] : Object.keys(groups).sort();
+      let html = '';
+
+      if (allSort === 'all-edge') {
+        html += `
+          <div class="table-header">
+            <div>Game Info</div>
+            <div class="col-odds">Current Odds</div>
+            <div class="col-pick">Model Pick</div>
+          </div>`;
+        for (const item of games) {
+          html += renderAllGameCard(item.game, item.origIdx);
+        }
+      } else {
+        for (const dateKey of sortedDates) {
+          const dayItems = groups[dateKey];
+          const label = getDateLabel(dayItems[0].game.commence_time);
+
+          html += `
+            <div class="date-header">
+              <span class="date-label">${label}</span>
+              <span class="date-line"></span>
+              <span class="date-count">${dayItems.length} game${dayItems.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="table-header">
+              <div>Game Info</div>
+              <div class="col-odds">Current Odds</div>
+              <div class="col-pick">Model Pick</div>
+            </div>`;
+
+          for (const item of dayItems) {
+            html += renderAllGameCard(item.game, item.origIdx);
+          }
+        }
+      }
+
       container.innerHTML = html;
     }
+
+    function renderAllGameCard(g, idx) {
+      const key = `all-${idx}`;
+      const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
+      const totalStr = g.total != null ? `o${g.total}` : '';
+
+      let pickHtml;
+      if (g.pick_team) {
+        const isStrong = Math.abs(g.edge) >= 7;
+        const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
+        pickHtml = `
+          <div class="${pickClass}">
+            <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
+            <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
+            <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
+          </div>`;
+      } else if (g.edge != null) {
+        pickHtml = `<div class="pick-col has-model"><span class="pick-text" style="color:#997a00;font-size:12px">Edge: ${g.edge > 0 ? '+' : ''}${g.edge}</span></div>`;
+      } else {
+        pickHtml = `<div class="pick-col no-pick"><span class="pick-text">No data</span></div>`;
+      }
+
+      return `
+        <div class="game-card" id="card-${key}" onclick="toggleGameDetail('${key}','all')">
+          <div class="game-info">
+            <div class="team-row">
+              <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
+              <span class="team-name">${g.away_team.toUpperCase()}</span>
+            </div>
+            <div class="team-row">
+              <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
+              <span class="team-name">${g.home_team.toUpperCase()}</span>
+            </div>
+            <div class="game-time">${formatTime(g.commence_time)}</div>
+          </div>
+          <div class="odds-col">
+            ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
+            ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
+          </div>
+          ${pickHtml}
+        </div>
+        <div class="game-detail" id="detail-${key}"></div>`;
+    }
+
+    // ─── Init ───
+
+    function renderError(msg) {
+      document.getElementById('games-container').innerHTML =
+        `<div class="error">${msg}</div>`;
+      document.getElementById('summary-count').textContent = 'Error loading picks';
+    }
+
+    function onDataLoaded(data) {
+      picksData = data;
+      document.getElementById('summary-date').textContent = data.date || '';
+      document.getElementById('summary-count').textContent = `${data.picks_count} picks from ${data.total_games} games`;
+      document.getElementById('picks-tab-count').textContent = data.picks_count || 0;
+      document.getElementById('all-tab-count').textContent = (data.all_games || []).length || data.total_games;
+      renderCurrentView();
+    }
+
+    // Cache-bust to avoid stale data
+    fetch(API_URL + '?t=' + Date.now())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(onDataLoaded)
+      .catch(e => renderError(`Failed to load picks: ${e.message}. Picks may not have been generated yet today.`));
   </script>
 </body>
 </html>

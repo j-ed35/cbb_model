@@ -40,7 +40,7 @@ jobs:
           KENPOM_PW: ${{ secrets.KENPOM_PW }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
-          uv run python -m src.cbb.predict_daily --html
+          uv run python -m src.cbb.predict_daily --json
 
       - name: Commit and push changes
         run: |
