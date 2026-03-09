@@ -109,6 +109,8 @@ ODDS_API_TO_ESPN_ID: dict[str, int] = {
     "East Texas A&M Lions": 2249,
     "Eastern Illinois Panthers": 2197,
     "Eastern Kentucky Colonels": 2198,
+    "East Tennessee St Buccaneers": 2193,
+    "East Tennessee State Buccaneers": 2193,
     "Eastern Michigan Eagles": 2199,
     "Eastern Washington Eagles": 331,
     "Elon Phoenix": 2210,
@@ -532,6 +534,8 @@ ODDS_API_TO_ABBREV: dict[str, str] = {
     # --- E ---
     "East Carolina Pirates": "ECU",
     "East Texas A&M Lions": "ETAM",
+    "East Tennessee St Buccaneers": "ETSU",
+    "East Tennessee State Buccaneers": "ETSU",
     "Eastern Illinois Panthers": "EIU",
     "Eastern Kentucky Colonels": "EKU",
     "Eastern Michigan Eagles": "EMU",

@@ -418,6 +418,7 @@
     }
     .record-stat.wins .stat-val { color: #66ff66; }
     .record-stat.losses .stat-val { color: #ff6666; }
+    .record-stat.pushes .stat-val { color: #cccccc; }
     .record-stat.pct .stat-val { color: #ffdd44; }
     .record-stat.pending .stat-val { color: #aaaaff; }
 
@@ -435,19 +436,16 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       padding: 5px 8px;
-      text-align: left;
+      text-align: center;
       border-right: 1px solid #334d80;
     }
+    .history-table thead th:first-child { text-align: left; }
     .history-table thead th:last-child { border-right: none; }
     .history-table tbody tr { border-bottom: 1px solid #ccd6e8; }
     .history-table tbody tr:nth-child(even) { background: #eef3fa; }
     .history-table tbody tr:hover { background: #dde8f8; }
-    .history-table td { padding: 4px 8px; border-right: 1px solid #ccd6e8; }
-    .history-table td:last-child { border-right: none; text-align: center; }
-
-    .result-w { color: #006600; font-weight: bold; }
-    .result-l { color: #cc0000; font-weight: bold; }
-    .result-p { color: #666; font-style: italic; }
+    .history-table td { padding: 5px 8px; border-right: 1px solid #ccd6e8; vertical-align: middle; }
+    .history-table td:last-child { border-right: none; }
 
     .history-day-hdr td {
       background: #334d80 !important;
@@ -458,6 +456,35 @@
       font-size: 10px;
       padding: 3px 8px;
     }
+
+    .hist-matchup { display: flex; flex-direction: column; gap: 1px; }
+    .hist-team-line { display: flex; align-items: center; gap: 5px; font-size: 11px; line-height: 1.5; }
+    .hist-team-logo { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
+    .hist-team-name { font-weight: bold; text-transform: uppercase; min-width: 40px; }
+    .hist-score { font-weight: bold; margin-left: auto; min-width: 20px; text-align: right; }
+    .hist-winner .hist-team-name { color: #002147; }
+    .hist-winner .hist-score { color: #002147; }
+    .hist-loser .hist-team-name { color: #999; }
+    .hist-loser .hist-score { color: #999; }
+
+    .cover-badge {
+      display: inline-block; padding: 2px 6px; font-weight: bold; font-size: 11px;
+      text-align: center; min-width: 44px; border-radius: 2px;
+    }
+    .cover-win { background: #d4f5d4; color: #004400; border: 1px solid #2d7a2d; }
+    .cover-loss { background: #ffd4d4; color: #660000; border: 1px solid #cc0000; }
+    .cover-push { background: #e8e8e8; color: #555; border: 1px solid #999; }
+
+    .result-badge {
+      display: inline-block; padding: 2px 8px; font-weight: bold; font-size: 11px;
+      color: #fff; min-width: 24px; text-align: center; border-radius: 2px;
+    }
+    .result-badge.win { background: #006600; }
+    .result-badge.loss { background: #cc0000; }
+    .result-badge.push { background: #888; }
+    .result-badge.pending { background: #aaa; font-style: italic; font-weight: normal; }
+
+    .pred-actual { font-size: 10px; color: #888; margin-top: 1px; }
 
     /* ── Utility ── */
     .no-picks { padding: 24px; text-align: center; color: #555; background: #fff; border: 1px solid #9aaccb; font-size: 13px; }
@@ -993,6 +1020,7 @@
     const o = historyData.overall || {};
     const wins = o.wins || 0;
     const losses = o.losses || 0;
+    const pushes = o.pushes || 0;
     const pending = o.pending || 0;
     const total = wins + losses;
     const pct = total > 0 ? (wins/total*100).toFixed(1) : '–';
@@ -1005,6 +1033,9 @@
       <div class="record-stat losses">
         <div class="stat-val">${losses}</div><div class="stat-lbl">Losses</div>
       </div>
+      ${pushes > 0 ? `<div class="record-stat pushes">
+        <div class="stat-val">${pushes}</div><div class="stat-lbl">Pushes</div>
+      </div>` : ''}
       <div class="record-stat pct">
         <div class="stat-val">${pct}%</div><div class="stat-lbl">Win %</div>
       </div>
@@ -1021,39 +1052,91 @@
 
     html += `<table class="history-table">
       <thead><tr>
-        <th>Date</th>
-        <th>Matchup</th>
+        <th style="text-align:left">Matchup</th>
         <th>Pick</th>
+        <th>Cover</th>
         <th>Edge</th>
         <th>Result</th>
       </tr></thead><tbody>`;
 
     for (const day of days) {
       const dayPicks = day.picks || [];
-      const dayWins   = dayPicks.filter(p=>p.result==='W').length;
-      const dayLosses = dayPicks.filter(p=>p.result==='L').length;
-      const daySuffix = dayPicks.length > 0
-        ? `${dayWins}-${dayLosses}${dayPicks.length-dayWins-dayLosses>0?` (${dayPicks.length-dayWins-dayLosses} pending)`:''}`
-        : '';
+      const dayW = dayPicks.filter(p=>p.result==='W').length;
+      const dayL = dayPicks.filter(p=>p.result==='L').length;
+      const dayP = dayPicks.filter(p=>p.result==='P').length;
+      const dayPend = dayPicks.length - dayW - dayL - dayP;
+      let daySummary = `${dayW}-${dayL}`;
+      if (dayP > 0) daySummary += `-${dayP}`;
+      if (dayPend > 0) daySummary += ` (${dayPend} pending)`;
 
       html += `<tr class="history-day-hdr">
-        <td colspan="5">${fmtHistDate(day.date)} &nbsp;&nbsp; ${daySuffix}</td>
+        <td colspan="5">${fmtHistDate(day.date)} &nbsp;&nbsp; ${daySummary}</td>
       </tr>`;
 
       for (const pick of dayPicks) {
-        const matchup = `${pick.away_abbrev || pick.away_team} @ ${pick.home_abbrev || pick.home_team}`;
+        const awayAbbr = pick.away_abbrev || pick.away_team;
+        const homeAbbr = pick.home_abbrev || pick.home_team;
+        const awayLogo = pick.away_logo
+          ? `<img class="hist-team-logo" src="${pick.away_logo}" alt="" onerror="this.style.display='none'">`
+          : '';
+        const homeLogo = pick.home_logo
+          ? `<img class="hist-team-logo" src="${pick.home_logo}" alt="" onerror="this.style.display='none'">`
+          : '';
+
+        const hasScores = pick.home_score != null && pick.away_score != null;
+        const homeWon = hasScores && pick.home_score > pick.away_score;
+        const awayWon = hasScores && pick.away_score > pick.home_score;
+
+        const matchupHtml = `<div class="hist-matchup">
+          <div class="hist-team-line ${awayWon ? 'hist-winner' : hasScores ? 'hist-loser' : ''}">
+            ${awayLogo}<span class="hist-team-name">${awayAbbr}</span>
+            ${hasScores ? `<span class="hist-score">${pick.away_score}</span>` : ''}
+          </div>
+          <div class="hist-team-line ${homeWon ? 'hist-winner' : hasScores ? 'hist-loser' : ''}">
+            ${homeLogo}<span class="hist-team-name">${homeAbbr}</span>
+            ${hasScores ? `<span class="hist-score">${pick.home_score}</span>` : ''}
+          </div>
+        </div>`;
+
+        // Pick + prediction subtitle
+        let predLine = '';
+        if (pick.pred_margin != null && hasScores) {
+          const predSide = pick.pred_margin > 0 ? homeAbbr : awayAbbr;
+          const predPts = Math.abs(pick.pred_margin).toFixed(1);
+          const actualMargin = pick.home_score - pick.away_score;
+          const actualSide = actualMargin > 0 ? homeAbbr : actualMargin < 0 ? awayAbbr : 'TIE';
+          const actualPts = Math.abs(actualMargin);
+          predLine = `<div class="pred-actual">Pred: ${predSide} by ${predPts} | Actual: ${actualSide} by ${actualPts}</div>`;
+        }
+        const pickHtml = `<strong>${pick.pick_abbrev || pick.pick_team}</strong> ${pick.pick_spread}${predLine}`;
+
+        // Cover margin
+        let coverHtml;
+        if (pick.cover_margin != null) {
+          const cm = pick.cover_margin;
+          const cls = cm > 0 ? 'cover-win' : cm < 0 ? 'cover-loss' : 'cover-push';
+          const sign = cm > 0 ? '+' : '';
+          coverHtml = `<span class="cover-badge ${cls}">${sign}${cm.toFixed(1)}</span>`;
+        } else {
+          coverHtml = '<span style="color:#aaa">–</span>';
+        }
+
+        // Edge
         const edgeStr = pick.edge != null ? (pick.edge>0?`+${pick.edge}`:pick.edge) : '–';
+
+        // Result badge
         let resultHtml;
-        if (pick.result === 'W') resultHtml = '<span class="result-w">W</span>';
-        else if (pick.result === 'L') resultHtml = '<span class="result-l">L</span>';
-        else resultHtml = '<span class="result-p">pending</span>';
+        if (pick.result === 'W') resultHtml = '<span class="result-badge win">W</span>';
+        else if (pick.result === 'L') resultHtml = '<span class="result-badge loss">L</span>';
+        else if (pick.result === 'P') resultHtml = '<span class="result-badge push">P</span>';
+        else resultHtml = '<span class="result-badge pending">...</span>';
 
         html += `<tr>
-          <td>${fmtHistDate(day.date)}</td>
-          <td>${matchup}</td>
-          <td><strong>${pick.pick_abbrev || pick.pick_team}</strong> ${pick.pick_spread}</td>
-          <td>${edgeStr}</td>
-          <td>${resultHtml}</td>
+          <td>${matchupHtml}</td>
+          <td style="text-align:center">${pickHtml}</td>
+          <td style="text-align:center">${coverHtml}</td>
+          <td style="text-align:center">${edgeStr}</td>
+          <td style="text-align:center">${resultHtml}</td>
         </tr>`;
       }
     }
@@ -1078,7 +1161,7 @@
     document.getElementById('picks-controls').style.display   = tab==='picks' ? '' : 'none';
     document.getElementById('all-controls').style.display     = tab==='all'   ? '' : 'none';
     document.getElementById('games-container').style.display  = tab!=='history' ? '' : 'none';
-    document.getElementById('history-section').style.display  = tab==='history' ? '' : 'none';
+    document.getElementById('history-section').style.display  = tab==='history' ? 'block' : 'none';
 
     if (tab==='history') renderHistoryView();
     else if (picksData) renderCurrentView();
@@ -1126,8 +1209,9 @@
       const o = historyData.overall || {};
       const t = (o.wins||0)+(o.losses||0);
       const pct = t>0 ? (o.wins/t*100).toFixed(1)+'%' : '–';
+      const pushStr = (o.pushes||0) > 0 ? `-${o.pushes}` : '';
       document.getElementById('ticker-record').textContent =
-        `SEASON: ${o.wins||0}-${o.losses||0} (${pct})`;
+        `SEASON: ${o.wins||0}-${o.losses||0}${pushStr} (${pct})`;
     }
   }
 
