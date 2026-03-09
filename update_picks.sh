@@ -5,11 +5,11 @@
 set -e
 
 echo "=== Generating today's picks ==="
-python -m src.cbb.predict_daily --json --save
+python3 -m src.cbb.predict_daily --json --save
 
 echo ""
 echo "=== Updating pick history ==="
-python -m src.cbb.update_history
+python3 -m src.cbb.update_history
 
 echo ""
 echo "=== Pushing to GitHub Pages ==="
