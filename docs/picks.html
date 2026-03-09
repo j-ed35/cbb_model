@@ -5,1041 +5,1160 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CBB Model Picks</title>
   <style>
+    /* ═══════════════════════════════════════════════
+       BASE — early-2000s sports site aesthetic
+    ═══════════════════════════════════════════════ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f0f2f5;
-      color: #333;
-    }
-    .header {
-      background: #1a1a2e;
-      color: white;
-      padding: 20px 0;
-      text-align: center;
-    }
-    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
-    .header .subtitle { font-size: 13px; color: #8899aa; margin-top: 4px; }
-    .container { max-width: 900px; margin: 0 auto; padding: 16px; }
-    .summary-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: white; border-radius: 8px; padding: 12px 20px;
-      margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      font-size: 14px; flex-wrap: wrap; gap: 8px;
-    }
-    .summary-bar .count { font-weight: 700; color: #1a1a2e; }
-    .summary-bar .date { color: #666; }
-
-    /* Controls bar */
-    .controls-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      background: white; border-radius: 8px; padding: 10px 20px;
-      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      font-size: 13px; flex-wrap: wrap; gap: 8px;
-    }
-    .sort-controls { display: flex; align-items: center; gap: 6px; }
-    .sort-controls label { color: #666; font-weight: 600; }
-    .sort-btn {
-      background: #f0f2f5; border: 1px solid #ddd; border-radius: 6px;
-      padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
-      transition: all 0.15s; color: #555;
-    }
-    .sort-btn:hover { background: #e4e7eb; }
-    .sort-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
-    .legend { display: flex; align-items: center; gap: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666; }
-    .legend-swatch {
-      width: 14px; height: 14px; border-radius: 3px; border: 2px solid;
-    }
-    .legend-swatch.regular { background: #f0f7ff; border-color: #c4ddff; }
-    .legend-swatch.strong { background: #e8f5e8; border-color: #86d486; }
-
-    /* Tab bar */
-    .tab-bar {
-      display: flex; gap: 0; margin-bottom: 8px;
-      background: white; border-radius: 8px; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .tab-btn {
-      flex: 1; padding: 12px 16px; border: none; background: white;
-      font-size: 14px; font-weight: 600; color: #666; cursor: pointer;
-      transition: all 0.15s; border-bottom: 3px solid transparent;
-    }
-    .tab-btn:hover { background: #f8f9fa; }
-    .tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; }
-    .tab-btn .tab-count {
-      font-size: 11px; font-weight: 700; background: #e8ecf0;
-      border-radius: 10px; padding: 1px 7px; margin-left: 6px; color: #666;
-    }
-    .tab-btn.active .tab-count { background: #1a1a2e; color: white; }
-
-    /* Search */
-    .search-bar {
-      background: white; border-radius: 8px; padding: 10px 16px;
-      margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .search-bar input {
-      width: 100%; border: 1px solid #ddd; border-radius: 6px;
-      padding: 8px 12px; font-size: 14px; outline: none;
-      transition: border-color 0.15s;
-    }
-    .search-bar input:focus { border-color: #1a1a2e; }
-    .search-bar input::placeholder { color: #aaa; }
-
-    /* No-pick indicator for all games */
-    .pick-col.no-pick {
-      background: #f5f5f5; border-color: #e0e0e0;
-    }
-    .pick-col.no-pick .pick-text { color: #999; font-weight: 500; font-size: 13px; }
-    .pick-col.has-model {
-      background: #fff8e8; border-color: #e8d8a0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      background: #b0bec5;
+      color: #000;
     }
 
-    /* Date group header */
-    .date-header {
-      display: flex; align-items: center; gap: 12px;
-      margin-top: 20px; margin-bottom: 4px; padding: 0 4px;
-    }
-    .date-header:first-child { margin-top: 0; }
-    .date-header .date-label {
-      font-size: 13px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: #1a1a2e; white-space: nowrap;
-    }
-    .date-header .date-line {
-      flex: 1; height: 1px; background: #ccc;
-    }
-    .date-header .date-count {
-      font-size: 12px; color: #888; white-space: nowrap;
-    }
+    a { color: #003399; }
 
-    /* Table header */
-    .table-header {
-      display: grid;
-      grid-template-columns: 1fr 200px 220px;
-      background: #e8ecf0;
-      border-radius: 8px 8px 0 0;
-      padding: 10px 16px;
-      font-size: 11px;
-      font-weight: 700;
+    /* ── Site header ── */
+    #site-header {
+      background: #002147;
+      color: #fff;
+      padding: 0;
+      border-bottom: 3px solid #c8102e;
+    }
+    #site-header-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 10px 8px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    #site-title {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #fff;
+      line-height: 1;
+    }
+    #site-subtitle {
+      font-size: 10px;
+      color: #99b8d4;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #667;
+      margin-top: 2px;
     }
-    .table-header .col-odds { text-align: center; }
-    .table-header .col-pick { text-align: center; }
+    #header-date {
+      font-size: 11px;
+      color: #99b8d4;
+      text-align: right;
+    }
 
-    /* Game card */
-    .game-card {
-      display: grid;
-      grid-template-columns: 1fr 200px 220px;
-      background: white;
-      border-bottom: 1px solid #e8ecf0;
-      padding: 12px 16px;
+    /* ── Ticker bar ── */
+    #ticker {
+      background: #c8102e;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 0;
+      border-bottom: 2px solid #8b0000;
+    }
+    #ticker-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 8px;
+      display: flex;
+      gap: 20px;
       align-items: center;
-      transition: background 0.15s;
+      flex-wrap: wrap;
+    }
+    #ticker-inner span { letter-spacing: 0.5px; }
+    #ticker-inner .sep { color: #ff9999; }
+
+    /* ── Main container ── */
+    #main-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 6px 0 20px;
+    }
+
+    /* ── Tab navigation ── */
+    #tab-nav {
+      background: #334d80;
+      border-bottom: 2px solid #002147;
+    }
+    #tab-nav table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    #tab-nav td {
+      padding: 7px 16px;
+      color: #c0d0e8;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-right: 1px solid #445d90;
+      white-space: nowrap;
+    }
+    #tab-nav td:hover { background: #445d90; color: #fff; }
+    #tab-nav td.active { background: #fff; color: #002147; border-bottom: 2px solid #fff; }
+    #tab-nav td .tab-count {
+      background: #c8102e;
+      color: #fff;
+      border-radius: 2px;
+      padding: 1px 5px;
+      font-size: 10px;
+      margin-left: 5px;
+    }
+    #tab-nav td.active .tab-count { background: #002147; }
+
+    /* ── Controls bar ── */
+    #controls-bar {
+      background: #e8edf5;
+      border-bottom: 1px solid #9aaccb;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 11px;
+    }
+    #controls-bar .lbl { font-weight: bold; color: #334d80; text-transform: uppercase; }
+    .ctrl-btn {
+      background: #fff;
+      border: 1px solid #9aaccb;
+      color: #334d80;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .ctrl-btn:hover { background: #d4ddf0; }
+    .ctrl-btn.active { background: #334d80; color: #fff; border-color: #334d80; }
+    #controls-bar .legend {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: #555;
+    }
+    .legend-swatch {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 1px solid;
+      vertical-align: middle;
+      margin-right: 3px;
+    }
+    .sw-strong { background: #d4f5d4; border-color: #2d7a2d; }
+    .sw-regular { background: #d4e8ff; border-color: #0047b3; }
+
+    /* Search */
+    #search-wrap {
+      background: #e8edf5;
+      border-bottom: 1px solid #9aaccb;
+      padding: 5px 8px;
+    }
+    #search-wrap input {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      border: 1px solid #9aaccb;
+      padding: 3px 8px;
+      width: 220px;
+      outline: none;
+    }
+    #search-wrap input:focus { border-color: #334d80; }
+
+    /* ── Section / date header ── */
+    .section-hdr {
+      background: #334d80;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 8px;
+      border-top: 2px solid #002147;
+      display: flex;
+      justify-content: space-between;
+    }
+    .section-hdr:first-child { border-top: none; }
+
+    /* ── Games table ── */
+    .games-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #9aaccb;
+      border-top: none;
+    }
+    .games-table thead tr {
+      background: #002147;
+      color: #fff;
+    }
+    .games-table thead th {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 5px 8px;
+      text-align: left;
+      border-right: 1px solid #334d80;
+    }
+    .games-table thead th:nth-child(2),
+    .games-table thead th:nth-child(3) { text-align: center; }
+
+    /* Game rows */
+    .game-row {
+      border-bottom: 1px solid #ccd6e8;
       cursor: pointer;
     }
-    .game-card:hover { background: #f8f9fa; }
-    .game-card.expanded { background: #f0f4ff; border-bottom: none; }
+    .game-row:nth-child(odd) { background: #fff; }
+    .game-row:nth-child(even) { background: #eef3fa; }
+    .game-row:hover { background: #dde8f8; }
+    .game-row.expanded { background: #dde8f8; border-bottom: none; }
 
-    /* Game info column */
-    .game-info { display: flex; flex-direction: column; gap: 6px; }
-    .team-row { display: flex; align-items: center; gap: 10px; }
+    /* Game info cell */
+    .game-row td { vertical-align: middle; padding: 6px 8px; border-right: 1px solid #ccd6e8; }
+    .game-row td:last-child { border-right: none; }
+
+    .team-row { display: flex; align-items: center; gap: 6px; line-height: 1.2; }
     .team-logo {
-      width: 32px; height: 32px; border-radius: 4px;
-      object-fit: contain; flex-shrink: 0;
-      background: #f5f5f5;
+      width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;
     }
-    .team-name {
-      font-size: 15px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 220px;
-    }
-    .game-time { font-size: 12px; color: #888; margin-left: 42px; }
+    .team-name { font-size: 12px; font-weight: bold; text-transform: uppercase; }
+    .game-time { font-size: 10px; color: #666; margin-top: 2px; margin-left: 26px; }
 
-    /* Odds column */
-    .odds-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .odds-total, .odds-spread {
-      font-size: 14px; font-weight: 600; color: #444;
-      background: #f0f2f5; border-radius: 4px; padding: 2px 10px;
-      min-width: 70px; text-align: center;
+    /* Odds cell */
+    .odds-cell { text-align: center; min-width: 80px; }
+    .odds-total { font-size: 11px; color: #444; }
+    .odds-spread { font-size: 12px; font-weight: bold; color: #002147; }
+
+    /* Pick cell */
+    .pick-cell { text-align: center; min-width: 130px; }
+    .pick-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 2px solid;
+      padding: 3px 8px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .pick-box.pick-strong { background: #d4f5d4; border-color: #2d7a2d; color: #004400; }
+    .pick-box.pick-regular { background: #d4e8ff; border-color: #0047b3; color: #002277; }
+    .pick-box.pick-none { background: #f0f0f0; border-color: #bbb; color: #888; font-size: 11px; font-weight: normal; }
+    .pick-box.pick-model-only { background: #fff8d4; border-color: #b8a000; color: #664400; font-size: 11px; }
+    .pick-logo { width: 18px; height: 18px; object-fit: contain; }
+    .edge-tag {
+      font-size: 9px;
+      font-weight: normal;
+      background: rgba(0,0,0,0.1);
+      padding: 1px 4px;
+      border-radius: 1px;
     }
 
-    /* Pick column */
-    .pick-col {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      background: #f0f7ff; border-radius: 8px; padding: 8px 12px;
-      border: 2px solid #c4ddff;
+    /* ── Detail row ── */
+    .detail-row { display: none; background: #f5f8fc; }
+    .detail-row.open { display: table-row; }
+    .detail-row td {
+      padding: 12px;
+      border-top: 1px dashed #9aaccb;
+      border-bottom: 2px solid #334d80;
     }
-    .pick-col.strong { background: #e8f5e8; border-color: #86d486; }
-    .pick-logo { width: 28px; height: 28px; object-fit: contain; }
-    .pick-text { font-size: 16px; font-weight: 700; color: #1a1a2e; white-space: nowrap; }
 
-    .edge-badge {
-      font-size: 11px; font-weight: 600; color: #666;
-      background: #eee; border-radius: 4px; padding: 1px 6px;
-      margin-left: 4px;
-    }
-    .pick-col.strong .edge-badge { background: #c8ecc8; color: #2d7a2d; }
-
-    .no-picks { text-align: center; padding: 40px; color: #888; font-size: 16px; }
-    .loading { text-align: center; padding: 60px; color: #888; }
-    .loading .spinner {
-      display: inline-block; width: 32px; height: 32px;
-      border: 3px solid #ddd; border-top-color: #1a1a2e;
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .error { text-align: center; padding: 40px; color: #c00; }
-    .footer { text-align: center; padding: 24px; font-size: 12px; color: #999; }
-
-    /* ─── Detail Panel ─── */
-    .game-detail {
-      background: #fafbfd;
-      border-bottom: 1px solid #e8ecf0;
-      padding: 0 16px;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.35s ease, padding 0.35s ease;
-    }
-    .game-detail.open {
-      max-height: 2000px;
-      padding: 20px 16px;
-    }
-    .detail-loading {
-      text-align: center; padding: 20px; color: #888; font-size: 13px;
-    }
-    .detail-loading .mini-spinner {
-      display: inline-block; width: 20px; height: 20px;
-      border: 2px solid #ddd; border-top-color: #1a1a2e;
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-      vertical-align: middle; margin-right: 8px;
-    }
+    .detail-loading { color: #666; font-style: italic; padding: 8px 0; }
 
     /* Model callout */
     .model-callout {
-      background: #1a1a2e; color: white; border-radius: 8px;
-      padding: 14px 18px; margin-bottom: 18px;
-      font-size: 14px; line-height: 1.5;
+      background: #002147;
+      color: #fff;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 12px;
     }
-    .model-callout .callout-main { font-weight: 600; font-size: 15px; }
-    .model-callout .callout-sub { color: #99aabb; font-size: 13px; margin-top: 4px; }
+    .model-callout .callout-main { font-weight: bold; font-size: 13px; }
+    .model-callout .callout-sub { color: #99b8d4; font-size: 11px; margin-top: 3px; }
 
-    /* Section headers */
-    .detail-section { margin-bottom: 18px; }
+    /* Section title within detail */
+    .detail-section { margin-bottom: 12px; }
     .detail-section:last-child { margin-bottom: 0; }
-    .section-title {
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: #889; margin-bottom: 8px;
+    .detail-title {
+      background: #c8102e;
+      color: #fff;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      margin-bottom: 4px;
     }
 
-    /* KenPom comparison table */
+    /* KenPom table */
     .kp-table {
-      width: 100%; border-collapse: collapse;
-      font-size: 13px; background: white;
-      border-radius: 6px; overflow: hidden;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      border: 1px solid #9aaccb;
     }
     .kp-table th, .kp-table td {
-      padding: 8px 12px; text-align: center;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 4px 8px;
+      border: 1px solid #ccd6e8;
+      text-align: center;
     }
-    .kp-table th { font-weight: 700; background: #f5f7fa; }
+    .kp-table th {
+      background: #334d80;
+      color: #fff;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
     .kp-table th:first-child, .kp-table td:first-child {
-      text-align: left; font-weight: 600; color: #667;
+      text-align: left;
+      font-weight: bold;
+      background: #eef3fa;
+      color: #334d80;
     }
-    .kp-table .better { color: #16a34a; font-weight: 700; }
+    .kp-table tr:nth-child(even) td:not(:first-child) { background: #f7faff; }
+    .kp-table .better { color: #006600; font-weight: bold; }
 
     /* Recent form */
-    .form-row {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 6px; flex-wrap: wrap;
-    }
-    .form-team-label {
-      font-size: 13px; font-weight: 700; min-width: 50px;
-    }
-    .form-pills { display: flex; gap: 3px; flex-wrap: wrap; }
+    .form-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+    .form-lbl { font-size: 11px; font-weight: bold; min-width: 44px; color: #334d80; }
+    .form-pills { display: flex; gap: 2px; flex-wrap: wrap; }
     .form-pill {
-      display: inline-block; width: 26px; height: 26px; line-height: 26px;
-      text-align: center; border-radius: 4px; font-size: 11px; font-weight: 700;
-      color: white; cursor: default; position: relative;
+      display: inline-block;
+      width: 20px; height: 20px; line-height: 20px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: bold;
+      color: #fff;
+      cursor: default;
+      position: relative;
     }
-    .form-pill.win { background: #16a34a; }
-    .form-pill.loss { background: #dc2626; }
-    .form-pill-tooltip {
-      display: none; position: absolute; bottom: 110%; left: 50%;
-      transform: translateX(-50%); background: #333; color: white;
-      padding: 4px 8px; border-radius: 4px; font-size: 11px;
-      white-space: nowrap; z-index: 10; font-weight: 400;
+    .form-pill.win { background: #006600; }
+    .form-pill.loss { background: #cc0000; }
+    .form-pill-tip {
+      display: none;
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      color: #fff;
+      padding: 3px 6px;
+      font-size: 10px;
+      white-space: nowrap;
+      z-index: 20;
+      font-weight: normal;
     }
-    .form-pill:hover .form-pill-tooltip { display: block; }
-    .form-summary {
-      font-size: 12px; color: #888; margin-left: 4px;
-    }
+    .form-pill:hover .form-pill-tip { display: block; }
+    .form-summary { font-size: 10px; color: #666; }
 
     /* Matchups */
     .matchup-item {
-      background: white; border-radius: 6px; padding: 10px 14px;
-      margin-bottom: 6px; font-size: 13px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-bottom: 1px solid #e0e8f0;
+      background: #fff;
     }
-    .matchup-date { color: #888; font-size: 12px; }
-    .matchup-score { font-weight: 700; }
-    .matchup-venue { color: #888; font-size: 12px; }
-    .no-data { color: #999; font-size: 13px; font-style: italic; }
+    .matchup-item:last-child { border-bottom: none; }
+    .matchup-date { color: #666; margin-right: 6px; }
+    .matchup-score { font-weight: bold; }
+    .matchup-venue { color: #888; margin-left: 6px; }
+    .no-data { color: #999; font-style: italic; font-size: 11px; padding: 4px 0; }
 
-    /* Roster grid */
-    .roster-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    }
+    /* Roster */
+    .roster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .roster-col h4 {
-      font-size: 13px; font-weight: 700; margin-bottom: 8px;
-      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: bold; color: #002147;
+      display: flex; align-items: center; gap: 5px;
+      margin-bottom: 4px; border-bottom: 1px solid #ccd6e8; padding-bottom: 3px;
     }
-    .roster-col h4 img { width: 24px; height: 24px; object-fit: contain; }
+    .roster-col h4 img { width: 18px; height: 18px; object-fit: contain; }
     .player-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 6px 0; border-bottom: 1px solid #f0f0f0;
-      font-size: 13px;
+      display: flex; align-items: center; gap: 6px;
+      padding: 3px 0; border-bottom: 1px solid #eef3fa; font-size: 11px;
     }
     .player-item:last-child { border-bottom: none; }
     .player-img {
-      width: 36px; height: 36px; border-radius: 50%;
-      object-fit: cover; background: #eee; flex-shrink: 0;
+      width: 28px; height: 28px; border-radius: 50%;
+      object-fit: cover; background: #ddd; flex-shrink: 0;
     }
-    .player-info { flex: 1; min-width: 0; }
-    .player-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .player-meta { font-size: 11px; color: #888; }
+    .player-name { font-weight: bold; }
+    .player-meta { color: #666; font-size: 10px; }
 
-    @media (max-width: 700px) {
-      .table-header, .game-card { grid-template-columns: 1fr 90px 130px; }
-      .team-name { max-width: 120px; font-size: 13px; }
-      .pick-text { font-size: 13px; }
-      .team-logo { width: 24px; height: 24px; }
-      .edge-badge { display: none; }
+    /* ── History tab ── */
+    #history-section { display: none; }
+
+    .record-banner {
+      background: #002147;
+      color: #fff;
+      padding: 10px 12px;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 2px solid #c8102e;
+    }
+    .record-stat { text-align: center; }
+    .record-stat .stat-val {
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .record-stat .stat-lbl {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #99b8d4;
+      margin-top: 2px;
+    }
+    .record-stat.wins .stat-val { color: #66ff66; }
+    .record-stat.losses .stat-val { color: #ff6666; }
+    .record-stat.pct .stat-val { color: #ffdd44; }
+    .record-stat.pending .stat-val { color: #aaaaff; }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #9aaccb;
+      font-size: 11px;
+    }
+    .history-table thead th {
+      background: #002147;
+      color: #fff;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 5px 8px;
+      text-align: left;
+      border-right: 1px solid #334d80;
+    }
+    .history-table thead th:last-child { border-right: none; }
+    .history-table tbody tr { border-bottom: 1px solid #ccd6e8; }
+    .history-table tbody tr:nth-child(even) { background: #eef3fa; }
+    .history-table tbody tr:hover { background: #dde8f8; }
+    .history-table td { padding: 4px 8px; border-right: 1px solid #ccd6e8; }
+    .history-table td:last-child { border-right: none; text-align: center; }
+
+    .result-w { color: #006600; font-weight: bold; }
+    .result-l { color: #cc0000; font-weight: bold; }
+    .result-p { color: #666; font-style: italic; }
+
+    .history-day-hdr td {
+      background: #334d80 !important;
+      color: #fff;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 10px;
+      padding: 3px 8px;
+    }
+
+    /* ── Utility ── */
+    .no-picks { padding: 24px; text-align: center; color: #555; background: #fff; border: 1px solid #9aaccb; font-size: 13px; }
+    .loading { padding: 30px; text-align: center; color: #555; background: #fff; font-style: italic; }
+    .error-msg { padding: 20px; text-align: center; color: #cc0000; background: #fff3f3; border: 1px solid #ffbbbb; }
+
+    #footer {
+      text-align: center;
+      padding: 12px;
+      font-size: 10px;
+      color: #667;
+      border-top: 1px solid #9aaccb;
+      background: #dce3ea;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .team-name { font-size: 11px; }
+      .pick-box { font-size: 11px; padding: 2px 5px; }
       .roster-grid { grid-template-columns: 1fr; }
-      .kp-table { font-size: 12px; }
-      .kp-table th, .kp-table td { padding: 6px 8px; }
-      .controls-bar { padding: 8px 12px; }
-      .legend { display: none; }
+      .record-banner { gap: 16px; }
+      .record-stat .stat-val { font-size: 18px; }
+      .games-table thead th:nth-child(1) { min-width: 140px; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>CBB MODEL PICKS</h1>
-    <div class="subtitle">Against the Spread</div>
+
+<!-- ── Site Header ── -->
+<div id="site-header">
+  <div id="site-header-inner">
+    <div>
+      <div id="site-title">CBB MODEL</div>
+      <div id="site-subtitle">College Basketball · Against the Spread</div>
+    </div>
+    <div id="header-date"></div>
+  </div>
+</div>
+
+<!-- ── Ticker ── -->
+<div id="ticker">
+  <div id="ticker-inner">
+    <span id="ticker-picks">Loading picks...</span>
+    <span class="sep">|</span>
+    <span id="ticker-record">Loading history...</span>
+    <span class="sep">|</span>
+    <span id="ticker-threshold"></span>
+  </div>
+</div>
+
+<!-- ── Main Wrap ── -->
+<div id="main-wrap">
+
+  <!-- Tab nav -->
+  <div id="tab-nav">
+    <table><tr>
+      <td class="active" id="tab-picks" onclick="setTab('picks')">
+        Model Picks <span class="tab-count" id="picks-tab-count">–</span>
+      </td>
+      <td id="tab-all" onclick="setTab('all')">
+        All Games <span class="tab-count" id="all-tab-count">–</span>
+      </td>
+      <td id="tab-history" onclick="setTab('history')">
+        History
+      </td>
+    </tr></table>
   </div>
 
-  <div class="container">
-    <div class="summary-bar">
-      <span class="count" id="summary-count">Loading...</span>
-      <span class="date" id="summary-date"></span>
-    </div>
-
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="picks" onclick="setTab('picks')">
-        Model Picks<span class="tab-count" id="picks-tab-count">0</span>
-      </button>
-      <button class="tab-btn" data-tab="all" onclick="setTab('all')">
-        All Games<span class="tab-count" id="all-tab-count">0</span>
-      </button>
-    </div>
-
-    <div id="picks-controls" class="controls-bar">
-      <div class="sort-controls">
-        <label>Sort:</label>
-        <button class="sort-btn active" data-sort="edge" onclick="setSort('edge')">Best Edge</button>
-        <button class="sort-btn" data-sort="time" onclick="setSort('time')">Game Time</button>
-      </div>
-      <div class="legend">
-        <div class="legend-item">
-          <span class="legend-swatch regular"></span>
-          <span>Pick (edge 4.5-7)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch strong"></span>
-          <span>Strong Pick (edge 7+)</span>
-        </div>
-      </div>
-    </div>
-
-    <div id="all-controls" class="controls-bar" style="display:none">
-      <div class="sort-controls">
-        <label>Sort:</label>
-        <button class="sort-btn active" data-sort="all-time" onclick="setAllSort('all-time')">Game Time</button>
-        <button class="sort-btn" data-sort="all-edge" onclick="setAllSort('all-edge')">Best Edge</button>
-      </div>
-    </div>
-
-    <div id="search-container" class="search-bar" style="display:none">
-      <input type="text" id="search-input" placeholder="Search teams..." oninput="handleSearch()">
-    </div>
-
-    <div id="games-container">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p style="margin-top:12px">Fetching today's picks...</p>
-      </div>
+  <!-- Controls (picks tab) -->
+  <div id="picks-controls" class="controls-bar">
+    <span class="lbl">Sort:</span>
+    <button class="ctrl-btn active" data-sort="edge" onclick="setSort('edge')">Best Edge</button>
+    <button class="ctrl-btn" data-sort="time" onclick="setSort('time')">Game Time</button>
+    <div class="legend">
+      <span><span class="legend-swatch sw-strong"></span>Strong (edge 7+)</span>
+      <span><span class="legend-swatch sw-regular"></span>Pick (edge 4.5-7)</span>
     </div>
   </div>
 
-  <div class="footer">
-    Model: GBM trained on KenPom ratings (2022-2026) | Data: KenPom + The Odds API
+  <!-- Controls (all tab) -->
+  <div id="all-controls" class="controls-bar" style="display:none">
+    <span class="lbl">Sort:</span>
+    <button class="ctrl-btn active" data-sort="all-time" onclick="setAllSort('all-time')">Game Time</button>
+    <button class="ctrl-btn" data-sort="all-edge" onclick="setAllSort('all-edge')">Best Edge</button>
+    <div id="search-inline" style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+      <span class="lbl">Search:</span>
+      <input type="text" id="search-input" placeholder="team name..." oninput="handleSearch()"
+        style="font-family:Arial,sans-serif;font-size:11px;border:1px solid #9aaccb;padding:2px 6px;outline:none;">
+    </div>
   </div>
 
-  <script>
-    const API_URL = './data/picks.json';
+  <!-- Games / History container -->
+  <div id="games-container">
+    <div class="loading">Fetching today's picks...</div>
+  </div>
 
-    // ─── State ───
-    let picksData = null;
-    let currentTab = 'picks';
-    let currentSort = 'edge';
-    let allSort = 'all-time';
-    let searchQuery = '';
-    let currentExpanded = null;
-    const detailCache = {};  // key -> html string
-    const espnCache = {};
+  <!-- History section (hidden until tab selected) -->
+  <div id="history-section">
+    <div id="history-container">
+      <div class="loading">Loading history...</div>
+    </div>
+  </div>
 
-    // ─── ESPN API ───
+</div><!-- /main-wrap -->
 
-    async function fetchESPN(path) {
-      if (espnCache[path]) return espnCache[path];
-      try {
-        const r = await fetch(`https://site.api.espn.com${path}`);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        espnCache[path] = data;
-        return data;
-      } catch (e) {
-        console.warn('ESPN API error:', path, e);
-        return null;
-      }
-    }
+<div id="footer">
+  Model: GBM trained on KenPom ratings (2022–2026) &nbsp;|&nbsp; Data: KenPom + The Odds API
+</div>
 
-    function fetchTeamSchedule(espnId) {
-      return fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${espnId}/schedule`);
-    }
-    function fetchTeamRoster(espnId) {
-      return fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${espnId}`);
-    }
+<script>
+  // ─── URLs ───
+  const PICKS_URL    = './data/picks.json';
+  const HISTORY_URL  = './data/picks_history.json';
 
-    // ─── Data Parsers ───
+  // ─── State ───
+  let picksData    = null;
+  let historyData  = null;
+  let currentTab   = 'picks';
+  let currentSort  = 'edge';
+  let allSort      = 'all-time';
+  let searchQuery  = '';
+  let currentExpanded = null;
+  const detailCache = {};
+  const espnCache   = {};
 
-    function getRecentForm(schedData, n = 10) {
-      if (!schedData || !schedData.events) return [];
-      const completed = schedData.events
-        .filter(e => e.competitions && e.competitions[0] && e.competitions[0].status &&
-                     e.competitions[0].status.type && e.competitions[0].status.type.completed)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, n)
-        .reverse();
+  // ─── ESPN helpers ───
+  async function fetchESPN(path) {
+    if (espnCache[path]) return espnCache[path];
+    try {
+      const r = await fetch(`https://site.api.espn.com${path}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      espnCache[path] = data;
+      return data;
+    } catch(e) { console.warn('ESPN error:', path, e); return null; }
+  }
+  const fetchTeamSchedule = id => fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${id}/schedule`);
+  const fetchTeamRoster   = id => fetchESPN(`/apis/site/v2/sports/basketball/mens-college-basketball/teams/${id}`);
 
-      return completed.map(e => {
+  // ─── Data parsers ───
+  function getRecentForm(schedData, n = 10) {
+    if (!schedData?.events) return [];
+    return schedData.events
+      .filter(e => e.competitions?.[0]?.status?.type?.completed)
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, n).reverse()
+      .map(e => {
         const comp = e.competitions[0];
         const teams = comp.competitors || [];
-        const teamEntry = teams.find(t => t.id === String(schedData.team?.id));
-        const oppEntry = teams.find(t => t.id !== String(schedData.team?.id));
-        const won = teamEntry ? teamEntry.winner : false;
-        const teamScore = teamEntry ? (teamEntry.score?.displayValue || teamEntry.score || '?') : '?';
-        const oppScore = oppEntry ? (oppEntry.score?.displayValue || oppEntry.score || '?') : '?';
-        const oppName = oppEntry ? (oppEntry.team?.abbreviation || oppEntry.team?.shortDisplayName || '?') : '?';
-        return { won, teamScore, oppScore, oppName, date: e.date };
+        const me = teams.find(t => t.id === String(schedData.team?.id));
+        const opp = teams.find(t => t.id !== String(schedData.team?.id));
+        return {
+          won: me?.winner || false,
+          teamScore: me?.score?.displayValue ?? me?.score ?? '?',
+          oppScore:  opp?.score?.displayValue ?? opp?.score ?? '?',
+          oppName:   opp?.team?.abbreviation ?? opp?.team?.shortDisplayName ?? '?',
+          date: e.date,
+        };
       });
-    }
+  }
 
-    function findMatchups(schedData, oppEspnId) {
-      if (!schedData || !schedData.events || !oppEspnId) return [];
-      return schedData.events.filter(e => {
-        if (!e.competitions || !e.competitions[0]) return false;
+  function findMatchups(schedData, oppId) {
+    if (!schedData?.events || !oppId) return [];
+    return schedData.events
+      .filter(e => {
+        const comp = e.competitions?.[0];
+        return comp?.status?.type?.completed &&
+               (comp.competitors || []).some(t => String(t.id) === String(oppId));
+      })
+      .map(e => {
         const comp = e.competitions[0];
-        if (!comp.status || !comp.status.type || !comp.status.type.completed) return false;
-        const teams = comp.competitors || [];
-        return teams.some(t => String(t.id) === String(oppEspnId));
-      }).map(e => {
-        const comp = e.competitions[0];
-        const teams = comp.competitors || [];
-        const home = teams.find(t => t.homeAway === 'home');
-        const away = teams.find(t => t.homeAway === 'away');
+        const home = (comp.competitors||[]).find(t => t.homeAway==='home');
+        const away = (comp.competitors||[]).find(t => t.homeAway==='away');
         return {
           date: e.date,
-          homeName: home?.team?.displayName || home?.team?.shortDisplayName || '?',
-          homeScore: home?.score?.displayValue || home?.score || '?',
-          awayName: away?.team?.displayName || away?.team?.shortDisplayName || '?',
-          awayScore: away?.score?.displayValue || away?.score || '?',
-          venue: comp.venue ? comp.venue.fullName : '',
-          city: comp.venue && comp.venue.address ? `${comp.venue.address.city || ''}, ${comp.venue.address.state || ''}` : '',
+          homeName: home?.team?.displayName ?? '?',
+          homeScore: home?.score?.displayValue ?? home?.score ?? '?',
+          awayName: away?.team?.displayName ?? '?',
+          awayScore: away?.score?.displayValue ?? away?.score ?? '?',
+          venue: comp.venue?.fullName ?? '',
+          city: comp.venue?.address ? `${comp.venue.address.city||''}, ${comp.venue.address.state||''}` : '',
         };
-      }).sort((a, b) => new Date(a.date) - new Date(b.date));
-    }
+      })
+      .sort((a,b) => new Date(a.date)-new Date(b.date));
+  }
 
-    function parseRoster(teamData) {
-      if (!teamData || !teamData.team || !teamData.team.athletes) return [];
-      return teamData.team.athletes.slice(0, 8).map(a => ({
-        name: a.displayName || a.fullName || '?',
-        number: a.jersey || '',
-        position: a.position?.abbreviation || '',
-        year: a.experience?.abbreviation || '',
-        height: a.displayHeight || '',
-        headshot: a.headshot ? a.headshot.href : null,
-      }));
-    }
+  function parseRoster(teamData) {
+    if (!teamData?.team?.athletes) return [];
+    return teamData.team.athletes.slice(0, 8).map(a => ({
+      name:     a.displayName ?? a.fullName ?? '?',
+      number:   a.jersey ?? '',
+      position: a.position?.abbreviation ?? '',
+      year:     a.experience?.abbreviation ?? '',
+      height:   a.displayHeight ?? '',
+      headshot: a.headshot?.href ?? null,
+    }));
+  }
 
-    // ─── Renderers ───
+  // ─── Detail renderers ───
+  function renderModelCallout(game) {
+    const side = game.pred_margin > 0 ? game.home_abbrev : game.away_abbrev;
+    const pts  = Math.abs(game.pred_margin).toFixed(1);
+    const edge = Math.abs(game.edge).toFixed(1);
+    return `<div class="model-callout">
+      <div class="callout-main">Model predicts ${side} by ${pts} pts &rarr; Take ${game.pick_abbrev} ${game.pick_spread}</div>
+      <div class="callout-sub">Edge: ${edge} pts (model thinks line is off by ${edge})</div>
+    </div>`;
+  }
 
-    function renderModelCallout(game) {
-      const homeAbbrev = game.home_abbrev;
-      const awayAbbrev = game.away_abbrev;
-      const margin = game.pred_margin;
-      const edge = game.edge;
-      const spread = game.spread_home;
-
-      let predSide, predPts;
-      if (margin > 0) {
-        predSide = homeAbbrev;
-        predPts = Math.abs(margin);
-      } else {
-        predSide = awayAbbrev;
-        predPts = Math.abs(margin);
+  function renderKenpomTable(game) {
+    const hk = game.home_kenpom, ak = game.away_kenpom;
+    if (!hk && !ak) return '<div class="no-data">KenPom data not available</div>';
+    const rows = [
+      ['KP Rank',    hk?.rank,      ak?.rank,      'lower'],
+      ['AdjEM',      hk?.adj_em,    ak?.adj_em,    'higher'],
+      ['Adj Off',    hk?.adj_oe,    ak?.adj_oe,    'higher', hk?.adj_oe_rank, ak?.adj_oe_rank],
+      ['Adj Def',    hk?.adj_de,    ak?.adj_de,    'lower',  hk?.adj_de_rank, ak?.adj_de_rank],
+      ['Tempo',      hk?.adj_tempo, ak?.adj_tempo, null,     hk?.adj_tempo_rank, ak?.adj_tempo_rank],
+      ['Record',     hk?.record,    ak?.record,    null],
+      ['Conference', hk?.conference,ak?.conference,null],
+    ];
+    let html = `<table class="kp-table">
+      <tr><th></th><th>${game.home_abbrev}</th><th>${game.away_abbrev}</th></tr>`;
+    for (const [lbl, hv, av, dir, hr, ar] of rows) {
+      let hc='', ac='';
+      if (dir && hv!=null && av!=null) {
+        if (dir==='higher') { if(hv>av) hc='better'; else if(av>hv) ac='better'; }
+        else                { if(hv<av) hc='better'; else if(av<hv) ac='better'; }
       }
+      const hs = hv!=null ? (hr!=null ? `${hv} (${hr})` : hv) : '–';
+      const as_ = av!=null ? (ar!=null ? `${av} (${ar})` : av) : '–';
+      html += `<tr><td>${lbl}</td><td class="${hc}">${hs}</td><td class="${ac}">${as_}</td></tr>`;
+    }
+    return html + '</table>';
+  }
 
-      const edgeAbs = Math.abs(edge);
-      const pickSide = game.pick_abbrev;
-      const pickSpread = game.pick_spread;
+  function renderRecentForm(abbrev, formData) {
+    if (!formData?.length) return '';
+    const wins = formData.filter(f=>f.won).length;
+    const pills = formData.map(f => {
+      const cls = f.won ? 'win' : 'loss';
+      const tip = `${f.won?'W':'L'} ${f.teamScore}-${f.oppScore} vs ${f.oppName}`;
+      return `<span class="form-pill ${cls}">${f.won?'W':'L'}<span class="form-pill-tip">${tip}</span></span>`;
+    }).join('');
+    return `<div class="form-row">
+      <span class="form-lbl">${abbrev}</span>
+      <span class="form-pills">${pills}</span>
+      <span class="form-summary">${wins}-${formData.length-wins} L${formData.length}</span>
+    </div>`;
+  }
 
-      return `<div class="model-callout">
-        <div class="callout-main">Model predicts ${predSide} by ${predPts.toFixed(1)} pts &rarr; Take ${pickSide} ${pickSpread}</div>
-        <div class="callout-sub">Edge: ${edgeAbs.toFixed(1)} pts (model thinks the line is off by ${edgeAbs.toFixed(1)})</div>
+  function renderMatchups(matchups) {
+    if (!matchups?.length) return '<div class="no-data">No previous meetings this season</div>';
+    return matchups.map(m => {
+      const d = new Date(m.date);
+      const ds = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const v = m.venue ? ` (${m.city||m.venue})` : '';
+      return `<div class="matchup-item">
+        <span class="matchup-date">${ds}:</span>
+        <span class="matchup-score">${m.awayName} ${m.awayScore}, ${m.homeName} ${m.homeScore}</span>
+        <span class="matchup-venue">${v}</span>
       </div>`;
-    }
+    }).join('');
+  }
 
-    function renderKenpomTable(game) {
-      const hk = game.home_kenpom;
-      const ak = game.away_kenpom;
-      if (!hk && !ak) return '<div class="no-data">KenPom data not available for this game</div>';
-
-      const rows = [
-        ['KP Rank', hk?.rank, ak?.rank, 'lower'],
-        ['AdjEM', hk?.adj_em, ak?.adj_em, 'higher'],
-        ['Adj Off', hk?.adj_oe, ak?.adj_oe, 'higher', hk?.adj_oe_rank, ak?.adj_oe_rank],
-        ['Adj Def', hk?.adj_de, ak?.adj_de, 'lower', hk?.adj_de_rank, ak?.adj_de_rank],
-        ['Tempo', hk?.adj_tempo, ak?.adj_tempo, null, hk?.adj_tempo_rank, ak?.adj_tempo_rank],
-        ['Record', hk?.record, ak?.record, null],
-        ['Conference', hk?.conference, ak?.conference, null],
-      ];
-
-      let html = `<table class="kp-table">
-        <tr><th></th><th>${game.home_abbrev}</th><th>${game.away_abbrev}</th></tr>`;
-
-      for (const [label, hv, av, betterDir, hRank, aRank] of rows) {
-        let hClass = '', aClass = '';
-        if (betterDir && hv != null && av != null) {
-          if (betterDir === 'higher') {
-            if (hv > av) hClass = 'better'; else if (av > hv) aClass = 'better';
-          } else {
-            if (hv < av) hClass = 'better'; else if (av < hv) aClass = 'better';
-          }
-        }
-        const hStr = hv != null ? (hRank != null ? `${hv} (${hRank})` : hv) : '-';
-        const aStr = av != null ? (aRank != null ? `${av} (${aRank})` : av) : '-';
-        html += `<tr><td>${label}</td><td class="${hClass}">${hStr}</td><td class="${aClass}">${aStr}</td></tr>`;
-      }
-      html += '</table>';
-      return html;
-    }
-
-    function renderRecentForm(abbrev, formData) {
-      if (!formData || formData.length === 0) return '';
-      const wins = formData.filter(f => f.won).length;
-      const losses = formData.length - wins;
-
-      let pills = '';
-      for (const f of formData) {
-        const cls = f.won ? 'win' : 'loss';
-        const lbl = f.won ? 'W' : 'L';
-        const tip = `${f.won ? 'W' : 'L'} ${f.teamScore}-${f.oppScore} vs ${f.oppName}`;
-        pills += `<span class="form-pill ${cls}">${lbl}<span class="form-pill-tooltip">${tip}</span></span>`;
-      }
-
-      return `<div class="form-row">
-        <span class="form-team-label">${abbrev}</span>
-        <span class="form-pills">${pills}</span>
-        <span class="form-summary">${wins}-${losses} L${formData.length}</span>
-      </div>`;
-    }
-
-    function renderMatchups(matchups) {
-      if (!matchups || matchups.length === 0) return '<div class="no-data">No previous meetings this season</div>';
-      let html = '';
-      for (const m of matchups) {
-        const d = new Date(m.date);
-        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const venueStr = m.venue ? ` (${m.city || m.venue})` : '';
-        html += `<div class="matchup-item">
-          <span class="matchup-date">${dateStr}:</span>
-          <span class="matchup-score">${m.awayName} ${m.awayScore}, ${m.homeName} ${m.homeScore}</span>
-          <span class="matchup-venue">${venueStr}</span>
-        </div>`;
-      }
-      return html;
-    }
-
-    function renderRoster(label, logo, players) {
-      if (!players || players.length === 0) return '';
-      let html = `<div class="roster-col"><h4><img src="${logo}" alt="" onerror="fallbackLogo(this)">${label}</h4>`;
-      for (const p of players) {
-        const img = p.headshot
-          ? `<img class="player-img" src="${p.headshot}" alt="" onerror="this.style.display='none'">`
-          : `<div class="player-img" style="background:#ddd"></div>`;
-        html += `<div class="player-item">
-          ${img}
-          <div class="player-info">
-            <div class="player-name">${p.number ? '#' + p.number + ' ' : ''}${p.name}</div>
-            <div class="player-meta">${[p.position, p.year, p.height].filter(Boolean).join(' | ')}</div>
-          </div>
-        </div>`;
-      }
-      html += '</div>';
-      return html;
-    }
-
-    // ─── Expand / Collapse ───
-
-    async function toggleGameDetail(detailKey, source) {
-      const detailEl = document.getElementById(`detail-${detailKey}`);
-      const cardEl = document.getElementById(`card-${detailKey}`);
-      if (!detailEl || !cardEl) return;
-
-      // Collapse current if open and different
-      if (currentExpanded !== null && currentExpanded !== detailKey) {
-        const prevDetail = document.getElementById(`detail-${currentExpanded}`);
-        const prevCard = document.getElementById(`card-${currentExpanded}`);
-        if (prevDetail) prevDetail.classList.remove('open');
-        if (prevCard) prevCard.classList.remove('expanded');
-      }
-
-      // Toggle this one
-      if (currentExpanded === detailKey) {
-        detailEl.classList.remove('open');
-        cardEl.classList.remove('expanded');
-        currentExpanded = null;
-        return;
-      }
-
-      currentExpanded = detailKey;
-      cardEl.classList.add('expanded');
-      detailEl.classList.add('open');
-
-      // If already loaded from cache, restore and done
-      if (detailCache[detailKey]) {
-        detailEl.innerHTML = detailCache[detailKey];
-        return;
-      }
-
-      // Get the game data from the right source
-      const gameList = source === 'all' ? picksData.all_games : picksData.games;
-      const idx = parseInt(detailKey.replace(/^(pick|all)-/, ''));
-      const game = gameList[idx];
-      if (!game) {
-        detailEl.innerHTML = '<div class="no-data">Game data not found</div>';
-        return;
-      }
-
-      const homeId = game.home_espn_id;
-      const awayId = game.away_espn_id;
-
-      // Show loading
-      detailEl.innerHTML = '<div class="detail-loading"><span class="mini-spinner"></span> Loading scouting data...</div>';
-
-      // Build content
-      let html = '';
-
-      // Model callout only if this game has a pick
-      if (game.pick_team) {
-        html += renderModelCallout(game);
-      } else if (game.pred_margin != null) {
-        const side = game.pred_margin > 0 ? game.home_abbrev : game.away_abbrev;
-        const pts = Math.abs(game.pred_margin);
-        html += `<div class="model-callout">
-          <div class="callout-main">Model predicts ${side} by ${pts.toFixed(1)} pts</div>
-          <div class="callout-sub">${game.edge != null ? `Edge: ${Math.abs(game.edge).toFixed(1)} pts (below threshold)` : 'No spread available'}</div>
-        </div>`;
-      }
-
-      // KenPom section
-      html += `<div class="detail-section">
-        <div class="section-title">KenPom Comparison</div>
-        ${renderKenpomTable(game)}
-      </div>`;
-
-      // Fetch ESPN data if IDs available
-      if (homeId || awayId) {
-        let homeSchedData = null, awaySchedData = null;
-        let homeTeamData = null, awayTeamData = null;
-
-        const promises = [];
-        promises.push(homeId ? fetchTeamSchedule(homeId) : Promise.resolve(null));
-        promises.push(homeId ? fetchTeamRoster(homeId) : Promise.resolve(null));
-        promises.push(awayId ? fetchTeamSchedule(awayId) : Promise.resolve(null));
-        promises.push(awayId ? fetchTeamRoster(awayId) : Promise.resolve(null));
-
-        try {
-          [homeSchedData, homeTeamData, awaySchedData, awayTeamData] = await Promise.all(promises);
-        } catch (e) {
-          console.warn('ESPN fetch error:', e);
-        }
-
-        // Previous Matchups
-        const matchups = homeSchedData ? findMatchups(homeSchedData, awayId) : [];
-        html += `<div class="detail-section">
-          <div class="section-title">Previous Matchups</div>
-          ${renderMatchups(matchups)}
-        </div>`;
-
-        // Recent Form
-        const homeForm = getRecentForm(homeSchedData, 10);
-        const awayForm = getRecentForm(awaySchedData, 10);
-        if (homeForm.length > 0 || awayForm.length > 0) {
-          html += `<div class="detail-section">
-            <div class="section-title">Recent Form (Last 10)</div>
-            ${renderRecentForm(game.home_abbrev, homeForm)}
-            ${renderRecentForm(game.away_abbrev, awayForm)}
-          </div>`;
-        }
-
-        // Roster
-        const homePlayers = parseRoster(homeTeamData);
-        const awayPlayers = parseRoster(awayTeamData);
-        if (homePlayers.length > 0 || awayPlayers.length > 0) {
-          html += `<div class="detail-section">
-            <div class="section-title">Key Players</div>
-            <div class="roster-grid">
-              ${renderRoster(game.home_abbrev, game.home_logo, homePlayers)}
-              ${renderRoster(game.away_abbrev, game.away_logo, awayPlayers)}
-            </div>
-          </div>`;
-        }
-      }
-
-      detailEl.innerHTML = html;
-      detailCache[detailKey] = html;
-    }
-
-    // ─── Utility Functions ───
-
-    function formatTime(isoStr) {
-      if (!isoStr) return '';
-      const d = new Date(isoStr);
-      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    }
-
-    function getDateLabel(isoStr) {
-      if (!isoStr) return 'Unknown';
-      const d = new Date(isoStr);
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const gameDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const diff = Math.round((gameDay - today) / 86400000);
-
-      if (diff === 0) return 'Today';
-      if (diff === 1) return 'Tomorrow';
-      if (diff === -1) return 'Yesterday';
-      return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    }
-
-    function getDateKey(isoStr) {
-      if (!isoStr) return '9999-99-99';
-      const d = new Date(isoStr);
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-
-    function fallbackLogo(img) {
-      img.style.display = 'none';
-    }
-
-    // ─── Tab + Sort ───
-
-    function setTab(tab) {
-      currentTab = tab;
-      currentExpanded = null;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-      document.getElementById('picks-controls').style.display = tab === 'picks' ? '' : 'none';
-      document.getElementById('all-controls').style.display = tab === 'all' ? '' : 'none';
-      document.getElementById('search-container').style.display = tab === 'all' ? '' : 'none';
-      if (picksData) renderCurrentView();
-    }
-
-    function setSort(mode) {
-      currentSort = mode;
-      currentExpanded = null;
-      document.querySelectorAll('#picks-controls .sort-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector(`[data-sort="${mode}"]`).classList.add('active');
-      if (picksData) renderCurrentView();
-    }
-
-    function setAllSort(mode) {
-      allSort = mode;
-      currentExpanded = null;
-      document.querySelectorAll('#all-controls .sort-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector(`[data-sort="${mode}"]`).classList.add('active');
-      if (picksData) renderCurrentView();
-    }
-
-    function handleSearch() {
-      searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
-      currentExpanded = null;
-      if (picksData) renderCurrentView();
-    }
-
-    function renderCurrentView() {
-      if (currentTab === 'picks') {
-        renderPicksView();
-      } else {
-        renderAllGamesView();
-      }
-    }
-
-    // ─── Picks View ───
-
-    function renderPicksView() {
-      const container = document.getElementById('games-container');
-      const games = picksData.games || [];
-
-      if (games.length === 0) {
-        container.innerHTML = '<div class="no-picks">No model picks today. Check back tomorrow.</div>';
-        return;
-      }
-
-      const indexed = games.map((g, i) => ({ game: g, origIdx: i }));
-
-      if (currentSort === 'time') {
-        indexed.sort((a, b) => new Date(a.game.commence_time) - new Date(b.game.commence_time));
-      } else {
-        indexed.sort((a, b) => Math.abs(b.game.edge) - Math.abs(a.game.edge));
-      }
-
-      if (currentSort === 'time') {
-        const groups = {};
-        for (const item of indexed) {
-          const key = getDateKey(item.game.commence_time);
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(item);
-        }
-
-        const sortedDates = Object.keys(groups).sort();
-        let html = '';
-
-        for (const dateKey of sortedDates) {
-          const dayItems = groups[dateKey];
-          const label = getDateLabel(dayItems[0].game.commence_time);
-
-          html += `
-            <div class="date-header">
-              <span class="date-label">${label}</span>
-              <span class="date-line"></span>
-              <span class="date-count">${dayItems.length} pick${dayItems.length !== 1 ? 's' : ''}</span>
-            </div>
-            <div class="table-header">
-              <div>Game Info</div>
-              <div class="col-odds">Current Odds</div>
-              <div class="col-pick">Model Pick</div>
-            </div>`;
-
-          for (const item of dayItems) {
-            html += renderPickCard(item.game, item.origIdx);
-          }
-        }
-        container.innerHTML = html;
-      } else {
-        let html = `
-          <div class="table-header">
-            <div>Game Info</div>
-            <div class="col-odds">Current Odds</div>
-            <div class="col-pick">Model Pick</div>
-          </div>`;
-        for (const item of indexed) {
-          html += renderPickCard(item.game, item.origIdx);
-        }
-        container.innerHTML = html;
-      }
-    }
-
-    function renderPickCard(g, idx) {
-      const key = `pick-${idx}`;
-      const isStrong = Math.abs(g.edge) >= 7;
-      const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
-      const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
-      const totalStr = g.total != null ? `o${g.total}` : '';
-
-      return `
-        <div class="game-card" id="card-${key}" onclick="toggleGameDetail('${key}','picks')">
-          <div class="game-info">
-            <div class="team-row">
-              <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
-              <span class="team-name">${g.away_team.toUpperCase()}</span>
-            </div>
-            <div class="team-row">
-              <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
-              <span class="team-name">${g.home_team.toUpperCase()}</span>
-            </div>
-            <div class="game-time">${formatTime(g.commence_time)}</div>
-          </div>
-          <div class="odds-col">
-            ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
-            ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
-          </div>
-          <div class="${pickClass}">
-            <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
-            <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
-            <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
-          </div>
+  function renderRoster(label, logo, players) {
+    if (!players?.length) return '';
+    let html = `<div class="roster-col"><h4><img src="${logo}" alt="" onerror="this.style.display='none'">${label}</h4>`;
+    for (const p of players) {
+      const img = p.headshot
+        ? `<img class="player-img" src="${p.headshot}" alt="" onerror="this.style.display='none'">`
+        : `<div class="player-img"></div>`;
+      html += `<div class="player-item">
+        ${img}
+        <div>
+          <div class="player-name">${p.number?'#'+p.number+' ':''}${p.name}</div>
+          <div class="player-meta">${[p.position,p.year,p.height].filter(Boolean).join(' | ')}</div>
         </div>
-        <div class="game-detail" id="detail-${key}"></div>`;
+      </div>`;
+    }
+    return html + '</div>';
+  }
+
+  // ─── Expand/collapse ───
+  async function toggleDetail(key, source) {
+    const detailRow = document.getElementById(`detail-${key}`);
+    const cardRow   = document.getElementById(`card-${key}`);
+    if (!detailRow || !cardRow) return;
+
+    if (currentExpanded && currentExpanded !== key) {
+      const prev = document.getElementById(`detail-${currentExpanded}`);
+      const prevCard = document.getElementById(`card-${currentExpanded}`);
+      if (prev) prev.classList.remove('open');
+      if (prevCard) prevCard.classList.remove('expanded');
     }
 
-    // ─── All Games View ───
+    if (currentExpanded === key) {
+      detailRow.classList.remove('open');
+      cardRow.classList.remove('expanded');
+      currentExpanded = null;
+      return;
+    }
 
-    function renderAllGamesView() {
-      const container = document.getElementById('games-container');
-      let games = (picksData.all_games || []).map((g, i) => ({ game: g, origIdx: i }));
+    currentExpanded = key;
+    cardRow.classList.add('expanded');
+    detailRow.classList.add('open');
 
-      // Filter by search
-      if (searchQuery) {
-        games = games.filter(item => {
-          const g = item.game;
-          const text = `${g.home_team} ${g.away_team} ${g.home_abbrev} ${g.away_abbrev}`.toLowerCase();
-          return text.includes(searchQuery);
-        });
+    if (detailCache[key]) {
+      detailRow.querySelector('td').innerHTML = detailCache[key];
+      return;
+    }
+
+    const gameList = source === 'all' ? picksData.all_games : picksData.games;
+    const idx = parseInt(key.replace(/^(pick|all)-/, ''));
+    const game = gameList[idx];
+    if (!game) {
+      detailRow.querySelector('td').innerHTML = '<div class="no-data">Game data not found</div>';
+      return;
+    }
+
+    detailRow.querySelector('td').innerHTML = '<div class="detail-loading">Loading scouting data...</div>';
+
+    let html = '';
+    if (game.pick_team) {
+      html += renderModelCallout(game);
+    } else if (game.pred_margin != null) {
+      const side = game.pred_margin > 0 ? game.home_abbrev : game.away_abbrev;
+      const pts = Math.abs(game.pred_margin).toFixed(1);
+      html += `<div class="model-callout">
+        <div class="callout-main">Model predicts ${side} by ${pts} pts</div>
+        <div class="callout-sub">${game.edge!=null?`Edge: ${Math.abs(game.edge).toFixed(1)} pts (below threshold)`:'No spread available'}</div>
+      </div>`;
+    }
+
+    html += `<div class="detail-section">
+      <div class="detail-title">KenPom Comparison</div>
+      ${renderKenpomTable(game)}
+    </div>`;
+
+    if (game.home_espn_id || game.away_espn_id) {
+      const [homeSched, homeTeam, awaySched, awayTeam] = await Promise.all([
+        game.home_espn_id ? fetchTeamSchedule(game.home_espn_id) : Promise.resolve(null),
+        game.home_espn_id ? fetchTeamRoster(game.home_espn_id)   : Promise.resolve(null),
+        game.away_espn_id ? fetchTeamSchedule(game.away_espn_id) : Promise.resolve(null),
+        game.away_espn_id ? fetchTeamRoster(game.away_espn_id)   : Promise.resolve(null),
+      ]).catch(() => [null,null,null,null]);
+
+      const matchups = homeSched ? findMatchups(homeSched, game.away_espn_id) : [];
+      html += `<div class="detail-section">
+        <div class="detail-title">Previous Matchups</div>
+        ${renderMatchups(matchups)}
+      </div>`;
+
+      const homeForm = getRecentForm(homeSched, 10);
+      const awayForm = getRecentForm(awaySched, 10);
+      if (homeForm.length || awayForm.length) {
+        html += `<div class="detail-section">
+          <div class="detail-title">Recent Form (Last 10)</div>
+          ${renderRecentForm(game.home_abbrev, homeForm)}
+          ${renderRecentForm(game.away_abbrev, awayForm)}
+        </div>`;
       }
 
-      // Sort
-      if (allSort === 'all-edge') {
-        games.sort((a, b) => {
-          const ae = a.game.edge != null ? Math.abs(a.game.edge) : -1;
-          const be = b.game.edge != null ? Math.abs(b.game.edge) : -1;
-          return be - ae;
-        });
-      } else {
-        games.sort((a, b) => new Date(a.game.commence_time || '9999') - new Date(b.game.commence_time || '9999'));
+      const homePlayers = parseRoster(homeTeam);
+      const awayPlayers = parseRoster(awayTeam);
+      if (homePlayers.length || awayPlayers.length) {
+        html += `<div class="detail-section">
+          <div class="detail-title">Key Players</div>
+          <div class="roster-grid">
+            ${renderRoster(game.home_abbrev, game.home_logo, homePlayers)}
+            ${renderRoster(game.away_abbrev, game.away_logo, awayPlayers)}
+          </div>
+        </div>`;
       }
+    }
 
-      if (games.length === 0) {
-        container.innerHTML = '<div class="no-picks">No games match your search.</div>';
-        return;
+    detailRow.querySelector('td').innerHTML = html;
+    detailCache[key] = html;
+  }
+
+  // ─── Utility ───
+  function formatTime(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }
+  function getDateLabel(iso) {
+    if (!iso) return 'Unknown';
+    const d = new Date(iso);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const gd = new Date(d); gd.setHours(0,0,0,0);
+    const diff = Math.round((gd-today)/86400000);
+    if (diff===0) return 'Today';
+    if (diff===1) return 'Tomorrow';
+    if (diff===-1) return 'Yesterday';
+    return d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  }
+  function getDateKey(iso) {
+    if (!iso) return '9999-99-99';
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // ─── Pick card HTML (table row version) ───
+  function pickBoxHtml(g) {
+    if (!g.pick_team) {
+      if (g.edge != null) {
+        return `<div class="pick-box pick-model-only">Edge: ${g.edge>0?'+':''}${g.edge}</div>`;
       }
+      return `<div class="pick-box pick-none">No data</div>`;
+    }
+    const cls = Math.abs(g.edge) >= 7 ? 'pick-strong' : 'pick-regular';
+    const logo = g.pick_logo
+      ? `<img class="pick-logo" src="${g.pick_logo}" alt="" onerror="this.style.display='none'">`
+      : '';
+    return `<div class="pick-box ${cls}">${logo}${g.pick_abbrev} ${g.pick_spread}<span class="edge-tag">${g.edge>0?'+':''}${g.edge}</span></div>`;
+  }
 
-      // Group by date
+  function renderGameRow(g, idx, keyPrefix, source) {
+    const key = `${keyPrefix}-${idx}`;
+    const spreadStr = g.spread_home!=null ? (g.spread_home>0?`+${g.spread_home}`:`${g.spread_home}`) : '–';
+    const totalStr  = g.total!=null ? `o${g.total}` : '–';
+    return `
+      <tr class="game-row" id="card-${key}" onclick="toggleDetail('${key}','${source}')">
+        <td>
+          <div class="team-row">
+            <img class="team-logo" src="${g.away_logo}" alt="" onerror="this.style.display='none'">
+            <span class="team-name">${g.away_team.toUpperCase()}</span>
+          </div>
+          <div class="team-row">
+            <img class="team-logo" src="${g.home_logo}" alt="" onerror="this.style.display='none'">
+            <span class="team-name">${g.home_team.toUpperCase()}</span>
+          </div>
+          <div class="game-time">${formatTime(g.commence_time)}</div>
+        </td>
+        <td class="odds-cell">
+          <div class="odds-total">${totalStr}</div>
+          <div class="odds-spread">${spreadStr}</div>
+        </td>
+        <td class="pick-cell">${pickBoxHtml(g)}</td>
+      </tr>
+      <tr class="detail-row" id="detail-${key}"><td colspan="3"></td></tr>`;
+  }
+
+  function tableHeader() {
+    return `<table class="games-table">
+      <thead><tr>
+        <th>Game Info</th>
+        <th style="text-align:center;width:90px">Current Odds</th>
+        <th style="text-align:center;width:140px">Model Pick</th>
+      </tr></thead><tbody>`;
+  }
+
+  // ─── Picks view ───
+  function renderPicksView() {
+    const container = document.getElementById('games-container');
+    const games = picksData.games || [];
+    if (!games.length) {
+      container.innerHTML = '<div class="no-picks">No model picks today. Check back tomorrow.</div>';
+      return;
+    }
+
+    const indexed = games.map((g,i)=>({g,i}));
+
+    if (currentSort==='time') {
+      indexed.sort((a,b)=>new Date(a.g.commence_time)-new Date(b.g.commence_time));
+      const groups = {};
+      for (const item of indexed) {
+        const k = getDateKey(item.g.commence_time);
+        (groups[k]||(groups[k]=[])).push(item);
+      }
+      let html = '';
+      for (const dk of Object.keys(groups).sort()) {
+        const items = groups[dk];
+        html += `<div class="section-hdr"><span>${getDateLabel(items[0].g.commence_time)}</span><span>${items.length} pick${items.length!==1?'s':''}</span></div>`;
+        html += tableHeader();
+        for (const item of items) html += renderGameRow(item.g, item.i, 'pick', 'picks');
+        html += '</tbody></table>';
+      }
+      container.innerHTML = html;
+    } else {
+      indexed.sort((a,b)=>Math.abs(b.g.edge)-Math.abs(a.g.edge));
+      let html = tableHeader();
+      for (const item of indexed) html += renderGameRow(item.g, item.i, 'pick', 'picks');
+      container.innerHTML = html + '</tbody></table>';
+    }
+  }
+
+  // ─── All games view ───
+  function renderAllGamesView() {
+    const container = document.getElementById('games-container');
+    let games = (picksData.all_games||[]).map((g,i)=>({g,i}));
+
+    if (searchQuery) {
+      games = games.filter(({g}) =>
+        `${g.home_team} ${g.away_team} ${g.home_abbrev} ${g.away_abbrev}`.toLowerCase().includes(searchQuery)
+      );
+    }
+
+    if (allSort==='all-edge') {
+      games.sort((a,b)=>(Math.abs(b.g.edge??-1))-(Math.abs(a.g.edge??-1)));
+      let html = tableHeader();
+      for (const item of games) html += renderGameRow(item.g, item.i, 'all', 'all');
+      container.innerHTML = (html + '</tbody></table>') || '<div class="no-picks">No games match.</div>';
+    } else {
+      games.sort((a,b)=>new Date(a.g.commence_time||'9999')-new Date(b.g.commence_time||'9999'));
       const groups = {};
       for (const item of games) {
-        const key = getDateKey(item.game.commence_time);
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(item);
+        const k = getDateKey(item.g.commence_time);
+        (groups[k]||(groups[k]=[])).push(item);
       }
-
-      const sortedDates = allSort === 'all-edge' ? ['all'] : Object.keys(groups).sort();
       let html = '';
-
-      if (allSort === 'all-edge') {
-        html += `
-          <div class="table-header">
-            <div>Game Info</div>
-            <div class="col-odds">Current Odds</div>
-            <div class="col-pick">Model Pick</div>
-          </div>`;
-        for (const item of games) {
-          html += renderAllGameCard(item.game, item.origIdx);
-        }
-      } else {
-        for (const dateKey of sortedDates) {
-          const dayItems = groups[dateKey];
-          const label = getDateLabel(dayItems[0].game.commence_time);
-
-          html += `
-            <div class="date-header">
-              <span class="date-label">${label}</span>
-              <span class="date-line"></span>
-              <span class="date-count">${dayItems.length} game${dayItems.length !== 1 ? 's' : ''}</span>
-            </div>
-            <div class="table-header">
-              <div>Game Info</div>
-              <div class="col-odds">Current Odds</div>
-              <div class="col-pick">Model Pick</div>
-            </div>`;
-
-          for (const item of dayItems) {
-            html += renderAllGameCard(item.game, item.origIdx);
-          }
-        }
+      for (const dk of Object.keys(groups).sort()) {
+        const items = groups[dk];
+        html += `<div class="section-hdr"><span>${getDateLabel(items[0].g.commence_time)}</span><span>${items.length} game${items.length!==1?'s':''}</span></div>`;
+        html += tableHeader();
+        for (const item of items) html += renderGameRow(item.g, item.i, 'all', 'all');
+        html += '</tbody></table>';
       }
+      container.innerHTML = html || '<div class="no-picks">No games match.</div>';
+    }
+  }
 
+  // ─── History view ───
+  function renderHistoryView() {
+    const container = document.getElementById('history-container');
+    if (!historyData) {
+      container.innerHTML = '<div class="loading">Loading history...</div>';
+      return;
+    }
+
+    const o = historyData.overall || {};
+    const wins = o.wins || 0;
+    const losses = o.losses || 0;
+    const pending = o.pending || 0;
+    const total = wins + losses;
+    const pct = total > 0 ? (wins/total*100).toFixed(1) : '–';
+    const days = historyData.days || [];
+
+    let html = `<div class="record-banner">
+      <div class="record-stat wins">
+        <div class="stat-val">${wins}</div><div class="stat-lbl">Wins</div>
+      </div>
+      <div class="record-stat losses">
+        <div class="stat-val">${losses}</div><div class="stat-lbl">Losses</div>
+      </div>
+      <div class="record-stat pct">
+        <div class="stat-val">${pct}%</div><div class="stat-lbl">Win %</div>
+      </div>
+      <div class="record-stat pending">
+        <div class="stat-val">${pending}</div><div class="stat-lbl">Pending</div>
+      </div>
+    </div>`;
+
+    if (!days.length) {
+      html += '<div class="no-picks">No history yet. Run update_picks.sh to start tracking.</div>';
       container.innerHTML = html;
+      return;
     }
 
-    function renderAllGameCard(g, idx) {
-      const key = `all-${idx}`;
-      const spreadStr = g.spread_home != null ? (g.spread_home > 0 ? `+${g.spread_home}` : `${g.spread_home}`) : '';
-      const totalStr = g.total != null ? `o${g.total}` : '';
+    html += `<table class="history-table">
+      <thead><tr>
+        <th>Date</th>
+        <th>Matchup</th>
+        <th>Pick</th>
+        <th>Edge</th>
+        <th>Result</th>
+      </tr></thead><tbody>`;
 
-      let pickHtml;
-      if (g.pick_team) {
-        const isStrong = Math.abs(g.edge) >= 7;
-        const pickClass = isStrong ? 'pick-col strong' : 'pick-col';
-        pickHtml = `
-          <div class="${pickClass}">
-            <img class="pick-logo" src="${g.pick_logo}" alt="" onerror="fallbackLogo(this)">
-            <span class="pick-text">${g.pick_abbrev} ${g.pick_spread}</span>
-            <span class="edge-badge">${g.edge > 0 ? '+' : ''}${g.edge}</span>
-          </div>`;
-      } else if (g.edge != null) {
-        pickHtml = `<div class="pick-col has-model"><span class="pick-text" style="color:#997a00;font-size:12px">Edge: ${g.edge > 0 ? '+' : ''}${g.edge}</span></div>`;
-      } else {
-        pickHtml = `<div class="pick-col no-pick"><span class="pick-text">No data</span></div>`;
+    for (const day of days) {
+      const dayPicks = day.picks || [];
+      const dayWins   = dayPicks.filter(p=>p.result==='W').length;
+      const dayLosses = dayPicks.filter(p=>p.result==='L').length;
+      const daySuffix = dayPicks.length > 0
+        ? `${dayWins}-${dayLosses}${dayPicks.length-dayWins-dayLosses>0?` (${dayPicks.length-dayWins-dayLosses} pending)`:''}`
+        : '';
+
+      html += `<tr class="history-day-hdr">
+        <td colspan="5">${fmtHistDate(day.date)} &nbsp;&nbsp; ${daySuffix}</td>
+      </tr>`;
+
+      for (const pick of dayPicks) {
+        const matchup = `${pick.away_abbrev || pick.away_team} @ ${pick.home_abbrev || pick.home_team}`;
+        const edgeStr = pick.edge != null ? (pick.edge>0?`+${pick.edge}`:pick.edge) : '–';
+        let resultHtml;
+        if (pick.result === 'W') resultHtml = '<span class="result-w">W</span>';
+        else if (pick.result === 'L') resultHtml = '<span class="result-l">L</span>';
+        else resultHtml = '<span class="result-p">pending</span>';
+
+        html += `<tr>
+          <td>${fmtHistDate(day.date)}</td>
+          <td>${matchup}</td>
+          <td><strong>${pick.pick_abbrev || pick.pick_team}</strong> ${pick.pick_spread}</td>
+          <td>${edgeStr}</td>
+          <td>${resultHtml}</td>
+        </tr>`;
       }
-
-      return `
-        <div class="game-card" id="card-${key}" onclick="toggleGameDetail('${key}','all')">
-          <div class="game-info">
-            <div class="team-row">
-              <img class="team-logo" src="${g.away_logo}" alt="" onerror="fallbackLogo(this)">
-              <span class="team-name">${g.away_team.toUpperCase()}</span>
-            </div>
-            <div class="team-row">
-              <img class="team-logo" src="${g.home_logo}" alt="" onerror="fallbackLogo(this)">
-              <span class="team-name">${g.home_team.toUpperCase()}</span>
-            </div>
-            <div class="game-time">${formatTime(g.commence_time)}</div>
-          </div>
-          <div class="odds-col">
-            ${totalStr ? `<div class="odds-total">${totalStr}</div>` : ''}
-            ${spreadStr ? `<div class="odds-spread">${spreadStr}</div>` : ''}
-          </div>
-          ${pickHtml}
-        </div>
-        <div class="game-detail" id="detail-${key}"></div>`;
     }
 
-    // ─── Init ───
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
 
-    function renderError(msg) {
-      document.getElementById('games-container').innerHTML =
-        `<div class="error">${msg}</div>`;
-      document.getElementById('summary-count').textContent = 'Error loading picks';
+  function fmtHistDate(dateStr) {
+    if (!dateStr) return '–';
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+
+  // ─── Tab + Sort ───
+  function setTab(tab) {
+    currentTab = tab;
+    currentExpanded = null;
+    ['picks','all','history'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+    });
+    document.getElementById('picks-controls').style.display   = tab==='picks' ? '' : 'none';
+    document.getElementById('all-controls').style.display     = tab==='all'   ? '' : 'none';
+    document.getElementById('games-container').style.display  = tab!=='history' ? '' : 'none';
+    document.getElementById('history-section').style.display  = tab==='history' ? '' : 'none';
+
+    if (tab==='history') renderHistoryView();
+    else if (picksData) renderCurrentView();
+  }
+
+  function setSort(mode) {
+    currentSort = mode;
+    currentExpanded = null;
+    document.querySelectorAll('#picks-controls .ctrl-btn').forEach(b => b.classList.toggle('active', b.dataset.sort===mode));
+    if (picksData) renderCurrentView();
+  }
+
+  function setAllSort(mode) {
+    allSort = mode;
+    currentExpanded = null;
+    document.querySelectorAll('#all-controls .ctrl-btn').forEach(b => b.classList.toggle('active', b.dataset.sort===mode));
+    if (picksData) renderCurrentView();
+  }
+
+  function handleSearch() {
+    searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+    currentExpanded = null;
+    if (picksData) renderCurrentView();
+  }
+
+  function renderCurrentView() {
+    if (currentTab==='picks') renderPicksView();
+    else if (currentTab==='all') renderAllGamesView();
+  }
+
+  // ─── Ticker ───
+  function updateTicker() {
+    const dateEl = document.getElementById('header-date');
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).toUpperCase();
+
+    if (picksData) {
+      document.getElementById('ticker-picks').textContent =
+        `${picksData.picks_count || 0} PICKS TODAY (${picksData.total_games || 0} GAMES)`;
+      document.getElementById('ticker-threshold').textContent =
+        `EDGE THRESHOLD: ${picksData.threshold || 4.5}`;
     }
 
-    function onDataLoaded(data) {
-      picksData = data;
-      document.getElementById('summary-date').textContent = data.date || '';
-      document.getElementById('summary-count').textContent = `${data.picks_count} picks from ${data.total_games} games`;
-      document.getElementById('picks-tab-count').textContent = data.picks_count || 0;
-      document.getElementById('all-tab-count').textContent = (data.all_games || []).length || data.total_games;
+    if (historyData) {
+      const o = historyData.overall || {};
+      const t = (o.wins||0)+(o.losses||0);
+      const pct = t>0 ? (o.wins/t*100).toFixed(1)+'%' : '–';
+      document.getElementById('ticker-record').textContent =
+        `SEASON: ${o.wins||0}-${o.losses||0} (${pct})`;
+    }
+  }
+
+  // ─── Init ───
+  async function init() {
+    document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).toUpperCase();
+
+    // Load picks and history in parallel
+    const [picksResult, historyResult] = await Promise.allSettled([
+      fetch(PICKS_URL + '?t=' + Date.now()).then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch(HISTORY_URL + '?t=' + Date.now()).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+
+    if (picksResult.status === 'fulfilled') {
+      picksData = picksResult.value;
+      document.getElementById('picks-tab-count').textContent = picksData.picks_count || 0;
+      document.getElementById('all-tab-count').textContent   = (picksData.all_games||[]).length || picksData.total_games || 0;
       renderCurrentView();
+    } else {
+      document.getElementById('games-container').innerHTML =
+        `<div class="error-msg">Failed to load picks: ${picksResult.reason?.message}. Picks may not have been generated yet today.</div>`;
     }
 
-    // Cache-bust to avoid stale data
-    fetch(API_URL + '?t=' + Date.now())
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(onDataLoaded)
-      .catch(e => renderError(`Failed to load picks: ${e.message}. Picks may not have been generated yet today.`));
-  </script>
+    if (historyResult.status === 'fulfilled' && historyResult.value) {
+      historyData = historyResult.value;
+    }
+
+    updateTicker();
+  }
+
+  init();
+</script>
 </body>
 </html>
