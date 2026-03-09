@@ -150,65 +150,91 @@ def fetch_espn_scores(date_str: str) -> dict[int, dict]:
 
 # ── ESPN-based result resolution ─────────────────────────────────────────────
 
+def _game_date(pick: dict, day_date: str) -> str:
+    """Return the ET calendar date the game is actually played on."""
+    commence = pick.get("commence_time", "")
+    if commence:
+        return commence_to_et_date(commence)
+    return day_date
+
+
 def resolve_via_espn(history: dict) -> int:
     """
     Resolve pending picks by fetching scores from ESPN's scoreboard API.
     Returns number of results newly resolved.
     """
-    pending_picks = [
-        (day, pick)
-        for day in history["days"]
-        for pick in day["picks"]
-        if pick.get("result") is None
-    ]
+    now = datetime.now(timezone.utc)
+    pending_picks = []
+    skipped_future = 0
+    for day in history["days"]:
+        for pick in day["picks"]:
+            if pick.get("result") is not None:
+                continue
+            # Skip games that haven't started yet
+            commence = pick.get("commence_time", "")
+            if commence:
+                try:
+                    game_dt = datetime.fromisoformat(commence.replace("Z", "+00:00"))
+                    if game_dt > now:
+                        skipped_future += 1
+                        continue
+                except Exception:
+                    pass
+            pending_picks.append((day, pick))
 
     if not pending_picks:
-        print("  No pending picks to resolve.")
+        if skipped_future:
+            print(f"  {skipped_future} picks skipped (games not started yet).")
+        print("  No completed picks to resolve.")
         return 0
 
     print(f"  Resolving {len(pending_picks)} pending picks via ESPN…")
+    if skipped_future:
+        print(f"  ({skipped_future} future games skipped)")
 
-    # Collect unique dates we need to fetch
+    # Collect unique game dates (from commence_time, not day["date"])
     dates_needed: set[str] = set()
     for day, pick in pending_picks:
-        commence = pick.get("commence_time", "")
-        if commence:
-            dates_needed.add(commence_to_et_date(commence))
-        dates_needed.add(day["date"])
+        dates_needed.add(_game_date(pick, day["date"]))
 
-    # Fetch ESPN scoreboards for all needed dates
-    all_scores: dict[int, dict] = {}
+    # Fetch ESPN scoreboards keyed by (date, team_id)
+    scores_by_date: dict[str, dict[int, dict]] = {}
     for d in sorted(dates_needed):
         print(f"    Fetching ESPN scores for {d}…")
-        day_scores = fetch_espn_scores(d)
-        all_scores.update(day_scores)
+        scores_by_date[d] = fetch_espn_scores(d)
 
-    if not all_scores:
+    total_games = sum(len(s) // 2 for s in scores_by_date.values())
+    if total_games == 0:
         print("  No ESPN scores available.")
         return 0
 
-    print(f"    {len(all_scores) // 2} completed games found.")
+    print(f"    {total_games} completed games found.")
 
     resolved = 0
     for day, pick in pending_picks:
+        game_dt = _game_date(pick, day["date"])
+        day_scores = scores_by_date.get(game_dt, {})
+        if not day_scores:
+            continue
+
         # Try to match using ESPN IDs stored in the pick
         home_espn_id = pick.get("home_espn_id")
         away_espn_id = pick.get("away_espn_id")
 
         score_entry = None
-        if home_espn_id and home_espn_id in all_scores:
-            score_entry = all_scores[home_espn_id]
-        elif away_espn_id and away_espn_id in all_scores:
-            score_entry = all_scores[away_espn_id]
+        if home_espn_id and home_espn_id in day_scores:
+            score_entry = day_scores[home_espn_id]
+        elif away_espn_id and away_espn_id in day_scores:
+            score_entry = day_scores[away_espn_id]
         else:
             # Fallback: look up ESPN IDs from team names
             home_id = get_espn_id(pick.get("home_team", ""))
             away_id = get_espn_id(pick.get("away_team", ""))
-            if home_id and home_id in all_scores:
-                score_entry = all_scores[home_id]
+            if home_id and home_id in day_scores:
+                score_entry = day_scores[home_id]
                 pick["home_espn_id"] = home_id
-            elif away_id and away_id in all_scores:
-                score_entry = all_scores[away_id]
+            elif away_id and away_id in day_scores:
+                score_entry = day_scores[away_id]
                 pick["away_espn_id"] = away_id
 
         if not score_entry:

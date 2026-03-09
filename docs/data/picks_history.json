@@ -1,10 +1,10 @@
 {
-  "last_updated": "2026-03-09T16:39:53.054716+00:00",
+  "last_updated": "2026-03-09T17:01:28.985731+00:00",
   "overall": {
-    "wins": 10,
-    "losses": 15,
+    "wins": 7,
+    "losses": 10,
     "pushes": 0,
-    "pending": 0
+    "pending": 8
   },
   "days": [
     {
@@ -22,11 +22,11 @@
           "pick_spread": "-5.5",
           "edge": 9.4,
           "commence_time": "2026-03-11T23:00:07Z",
-          "result": "L",
+          "result": null,
           "home_espn_id": 251,
-          "home_score": 85,
-          "away_score": 88,
-          "cover_margin": -8.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "Cincinnati Bearcats",
@@ -40,11 +40,11 @@
           "pick_spread": "-9.5",
           "edge": 8.4,
           "commence_time": "2026-03-10T19:00:33Z",
-          "result": "W",
+          "result": null,
           "home_espn_id": 2132,
-          "home_score": 73,
-          "away_score": 63,
-          "cover_margin": 0.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "BYU Cougars",
@@ -58,11 +58,11 @@
           "pick_spread": "-10.5",
           "edge": 7.2,
           "commence_time": "2026-03-10T23:00:00Z",
-          "result": "L",
+          "result": null,
           "home_espn_id": 252,
-          "home_score": 82,
-          "away_score": 76,
-          "cover_margin": -4.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "Jacksonville St Gamecocks",
@@ -76,11 +76,11 @@
           "pick_spread": "+1.5",
           "edge": 6.3,
           "commence_time": "2026-03-11T01:00:00Z",
-          "result": "L",
+          "result": null,
           "home_espn_id": 55,
-          "home_score": 61,
-          "away_score": 64,
-          "cover_margin": -1.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "SMU Mustangs",
@@ -94,11 +94,11 @@
           "pick_spread": "-4.5",
           "edge": 5.8,
           "commence_time": "2026-03-10T20:30:08Z",
-          "result": "W",
+          "result": null,
           "home_espn_id": 2567,
-          "home_score": 91,
-          "away_score": 78,
-          "cover_margin": 8.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "Vermont Catamounts",
@@ -112,11 +112,11 @@
           "pick_spread": "+10.5",
           "edge": -5.3,
           "commence_time": "2026-03-10T23:00:00Z",
-          "result": "L",
+          "result": null,
           "home_espn_id": 261,
-          "home_score": 77,
-          "away_score": 57,
-          "cover_margin": -9.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "East Tennessee St Buccaneers",
@@ -130,11 +130,11 @@
           "pick_spread": "-1.5",
           "edge": 4.7,
           "commence_time": "2026-03-09T23:00:00Z",
-          "result": "W",
+          "result": null,
           "home_espn_id": 2193,
-          "home_score": 83,
-          "away_score": 76,
-          "cover_margin": 5.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         },
         {
           "home_team": "Oklahoma Sooners",
@@ -148,11 +148,11 @@
           "pick_spread": "-6.5",
           "edge": 4.7,
           "commence_time": "2026-03-12T01:30:23Z",
-          "result": "L",
+          "result": null,
           "home_espn_id": 201,
-          "home_score": 85,
-          "away_score": 88,
-          "cover_margin": -9.5
+          "home_score": null,
+          "away_score": null,
+          "cover_margin": null
         }
       ]
     },
