@@ -1,11 +1,128 @@
 {
-  "last_updated": "2026-03-09T12:20:28.029629+00:00",
+  "last_updated": "2026-03-09T16:11:11.461088+00:00",
   "overall": {
     "wins": 0,
     "losses": 0,
-    "pending": 17
+    "pending": 25
   },
   "days": [
+    {
+      "date": "2026-03-09",
+      "picks": [
+        {
+          "home_team": "Texas Longhorns",
+          "away_team": "Ole Miss Rebels",
+          "home_abbrev": "TEX",
+          "away_abbrev": "MISS",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/251.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/145.png&w=40&h=40",
+          "pick_team": "Texas Longhorns",
+          "pick_abbrev": "TEX",
+          "pick_spread": "-5.5",
+          "edge": 9.4,
+          "commence_time": "2026-03-11T23:00:07Z",
+          "result": null
+        },
+        {
+          "home_team": "Cincinnati Bearcats",
+          "away_team": "Utah Utes",
+          "home_abbrev": "CIN",
+          "away_abbrev": "UTAH",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2132.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/254.png&w=40&h=40",
+          "pick_team": "Cincinnati Bearcats",
+          "pick_abbrev": "CIN",
+          "pick_spread": "-9.5",
+          "edge": 8.4,
+          "commence_time": "2026-03-10T19:00:33Z",
+          "result": null
+        },
+        {
+          "home_team": "BYU Cougars",
+          "away_team": "Kansas St Wildcats",
+          "home_abbrev": "BYU",
+          "away_abbrev": "KSU",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/252.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2306.png&w=40&h=40",
+          "pick_team": "BYU Cougars",
+          "pick_abbrev": "BYU",
+          "pick_spread": "-10.5",
+          "edge": 7.2,
+          "commence_time": "2026-03-10T23:00:00Z",
+          "result": null
+        },
+        {
+          "home_team": "Jacksonville St Gamecocks",
+          "away_team": "New Mexico St Aggies",
+          "home_abbrev": "JVST",
+          "away_abbrev": "NMSU",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/55.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/166.png&w=40&h=40",
+          "pick_team": "Jacksonville St Gamecocks",
+          "pick_abbrev": "JVST",
+          "pick_spread": "+1.5",
+          "edge": 6.3,
+          "commence_time": "2026-03-11T01:00:00Z",
+          "result": null
+        },
+        {
+          "home_team": "SMU Mustangs",
+          "away_team": "Syracuse Orange",
+          "home_abbrev": "SMU",
+          "away_abbrev": "SYR",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2567.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/183.png&w=40&h=40",
+          "pick_team": "SMU Mustangs",
+          "pick_abbrev": "SMU",
+          "pick_spread": "-4.5",
+          "edge": 5.8,
+          "commence_time": "2026-03-10T20:30:08Z",
+          "result": null
+        },
+        {
+          "home_team": "Vermont Catamounts",
+          "away_team": "NJIT Highlanders",
+          "home_abbrev": "UVM",
+          "away_abbrev": "NJIT",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/261.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2885.png&w=40&h=40",
+          "pick_team": "NJIT Highlanders",
+          "pick_abbrev": "NJIT",
+          "pick_spread": "+10.5",
+          "edge": -5.3,
+          "commence_time": "2026-03-10T23:00:00Z",
+          "result": null
+        },
+        {
+          "home_team": "East Tennessee St Buccaneers",
+          "away_team": "Furman Paladins",
+          "home_abbrev": "East",
+          "away_abbrev": "FUR",
+          "home_logo": "",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/231.png&w=40&h=40",
+          "pick_team": "East Tennessee St Buccaneers",
+          "pick_abbrev": "East",
+          "pick_spread": "-1.5",
+          "edge": 4.7,
+          "commence_time": "2026-03-09T23:00:00Z",
+          "result": null
+        },
+        {
+          "home_team": "Oklahoma Sooners",
+          "away_team": "South Carolina Gamecocks",
+          "home_abbrev": "OU",
+          "away_abbrev": "SC",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/201.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2579.png&w=40&h=40",
+          "pick_team": "Oklahoma Sooners",
+          "pick_abbrev": "OU",
+          "pick_spread": "-6.5",
+          "edge": 4.7,
+          "commence_time": "2026-03-12T01:30:23Z",
+          "result": null
+        }
+      ]
+    },
     {
       "date": "2026-03-07",
       "picks": [
