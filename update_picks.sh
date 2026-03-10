@@ -1,15 +1,19 @@
 #!/bin/bash
 # Quick script to update daily picks and push to GitHub Pages
 # Run from project root: ./update_picks.sh
+#
+# Order matters: update_history runs FIRST so it can read yesterday's
+# picks.json (which contains yesterday's games) before predict_daily
+# overwrites it with today's predictions.
 
 set -e
 
-echo "=== Generating today's picks ==="
-python3 -m src.cbb.predict_daily --json --save
+echo "=== Updating pick history (resolving yesterday's games) ==="
+python3 -m src.cbb.update_history
 
 echo ""
-echo "=== Updating pick history ==="
-python3 -m src.cbb.update_history
+echo "=== Generating today's picks ==="
+python3 -m src.cbb.predict_daily --json --save
 
 echo ""
 echo "=== Pushing to GitHub Pages ==="

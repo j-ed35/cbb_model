@@ -371,55 +371,160 @@ def resolve_via_csv(history: dict) -> int:
 
 # ── history management ─────────────────────────────────────────────────────────
 
-def add_today_picks(history: dict, picks_data: dict) -> bool:
-    """Add today's picks to history as pending. Returns True if new picks added."""
-    date = picks_data.get("date")
-    if not date:
-        print("  picks.json has no 'date' field — skipping.", file=sys.stderr)
-        return False
+def _existing_game_keys(history: dict) -> set[tuple[str, str, str]]:
+    """Return set of (commence_time, home_team, away_team) already in history."""
+    keys: set[tuple[str, str, str]] = set()
+    for day in history["days"]:
+        for p in day["picks"]:
+            keys.add((
+                p.get("commence_time", ""),
+                p.get("home_team", ""),
+                p.get("away_team", ""),
+            ))
+    return keys
 
-    existing_dates = {d["date"] for d in history["days"]}
-    if date in existing_dates:
-        print(f"  {date} already in history — skipping add.")
-        return False
 
-    games = picks_data.get("games", [])
-    if not games:
-        print(f"  No picks for {date}.")
-        return False
+def _today_et() -> str:
+    """Return today's date string in Eastern Time."""
+    return (datetime.now(timezone.utc) - timedelta(hours=5)).strftime("%Y-%m-%d")
 
-    day_entry = {
-        "date": date,
-        "picks": [
-            {
-                "home_team": g.get("home_team", ""),
-                "away_team": g.get("away_team", ""),
-                "home_abbrev": g.get("home_abbrev", ""),
-                "away_abbrev": g.get("away_abbrev", ""),
-                "home_logo": g.get("home_logo", ""),
-                "away_logo": g.get("away_logo", ""),
-                "home_espn_id": g.get("home_espn_id"),
-                "away_espn_id": g.get("away_espn_id"),
-                "pick_team": g.get("pick_team", ""),
-                "pick_abbrev": g.get("pick_abbrev", ""),
-                "pick_spread": g.get("pick_spread", ""),
-                "spread_home": g.get("spread_home"),
-                "pred_margin": g.get("pred_margin"),
-                "edge": g.get("edge"),
-                "commence_time": g.get("commence_time", ""),
-                "result": None,
-                "home_score": None,
-                "away_score": None,
-                "cover_margin": None,
-            }
-            for g in games
-        ],
+
+def _make_pick_entry(g: dict) -> dict:
+    return {
+        "home_team": g.get("home_team", ""),
+        "away_team": g.get("away_team", ""),
+        "home_abbrev": g.get("home_abbrev", ""),
+        "away_abbrev": g.get("away_abbrev", ""),
+        "home_logo": g.get("home_logo", ""),
+        "away_logo": g.get("away_logo", ""),
+        "home_espn_id": g.get("home_espn_id"),
+        "away_espn_id": g.get("away_espn_id"),
+        "pick_team": g.get("pick_team", ""),
+        "pick_abbrev": g.get("pick_abbrev", ""),
+        "pick_spread": g.get("pick_spread", ""),
+        "spread_home": g.get("spread_home"),
+        "pred_margin": g.get("pred_margin"),
+        "edge": g.get("edge"),
+        "commence_time": g.get("commence_time", ""),
+        "result": None,
+        "home_score": None,
+        "away_score": None,
+        "cover_margin": None,
     }
 
-    history["days"].append(day_entry)
+
+def add_past_picks(history: dict, picks_data: dict) -> bool:
+    """
+    Add picks from picks_data to history, filed under their actual game date
+    (ET).  Only adds games whose game date is strictly before today so that
+    picks don't appear in History until the day after they're played.
+    Returns True if any new picks were added.
+    """
+    today = _today_et()
+    games = picks_data.get("games", [])
+    if not games:
+        print("  No games in picks.json.")
+        return False
+
+    existing_keys = _existing_game_keys(history)
+    skipped_future = 0
+    skipped_dup = 0
+    games_by_date: dict[str, list[dict]] = {}
+
+    for g in games:
+        commence = g.get("commence_time", "")
+        game_date = commence_to_et_date(commence) if commence else picks_data.get("date", "")
+
+        # Only add games that have already been played (game date < today)
+        if game_date >= today:
+            skipped_future += 1
+            continue
+
+        key = (commence, g.get("home_team", ""), g.get("away_team", ""))
+        if key in existing_keys:
+            skipped_dup += 1
+            continue
+
+        games_by_date.setdefault(game_date, []).append(g)
+
+    if skipped_future:
+        print(f"  Skipped {skipped_future} picks for today/future dates.")
+    if skipped_dup:
+        print(f"  Skipped {skipped_dup} picks already in history.")
+
+    if not games_by_date:
+        print("  No new past picks to add.")
+        return False
+
+    # Find or create day entries and add picks
+    added = 0
+    for game_date in sorted(games_by_date):
+        day_entry = next((d for d in history["days"] if d["date"] == game_date), None)
+        if day_entry is None:
+            day_entry = {"date": game_date, "picks": []}
+            history["days"].append(day_entry)
+
+        for g in games_by_date[game_date]:
+            day_entry["picks"].append(_make_pick_entry(g))
+            added += 1
+
     history["days"].sort(key=lambda d: d["date"], reverse=True)
-    print(f"  Added {len(day_entry['picks'])} picks for {date}.")
+    print(f"  Added {added} past picks across {len(games_by_date)} day(s).")
     return True
+
+
+def deduplicate_history(history: dict) -> int:
+    """
+    Remove duplicate picks across days.  A pick is a duplicate if the same
+    (commence_time, home_team, away_team) appears in multiple day entries.
+
+    Also removes picks from a day whose commence_time doesn't match that
+    day's date (i.e. future-day games that snuck into history).
+
+    Keeps the entry with a resolved result if one exists, otherwise keeps
+    the one from the day closest to the actual game date.  Returns count
+    of picks removed.
+    """
+    seen: dict[tuple[str, str, str], tuple[str, dict]] = {}  # key → (day_date, pick)
+    removed = 0
+
+    for day in history["days"]:
+        keep = []
+        for pick in day["picks"]:
+            commence = pick.get("commence_time", "")
+            game_date = commence_to_et_date(commence) if commence else day["date"]
+
+            # Drop picks whose game date doesn't match the day they're filed under
+            if game_date != day["date"]:
+                removed += 1
+                continue
+
+            key = (commence, pick.get("home_team", ""), pick.get("away_team", ""))
+            if key in seen:
+                prev_day_date, prev_pick = seen[key]
+                # Prefer the entry that has a resolved result
+                if pick.get("result") is not None and prev_pick.get("result") is None:
+                    # Replace previous with this one — remove previous from its day
+                    for d in history["days"]:
+                        if d["date"] == prev_day_date:
+                            d["picks"] = [p for p in d["picks"] if p is not prev_pick]
+                            break
+                    seen[key] = (day["date"], pick)
+                    keep.append(pick)
+                else:
+                    removed += 1
+                    continue
+            else:
+                seen[key] = (day["date"], pick)
+                keep.append(pick)
+        day["picks"] = keep
+
+    # Remove empty days
+    history["days"] = [d for d in history["days"] if d["picks"]]
+
+    if removed:
+        print(f"  Deduplicated history: removed {removed} duplicate/misplaced picks.")
+    return removed
 
 
 def recalculate_overall(history: dict):
@@ -457,8 +562,11 @@ def main():
         "days": [],
     })
 
-    print("Adding today's picks to history…")
-    add_today_picks(history, picks_data)
+    print("Adding past picks to history…")
+    add_past_picks(history, picks_data)
+
+    print("Deduplicating history…")
+    deduplicate_history(history)
 
     print("Resolving ATS results via ESPN…")
     espn_resolved = resolve_via_espn(history)

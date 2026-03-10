@@ -1065,6 +1065,9 @@
       const dayL = dayPicks.filter(p=>p.result==='L').length;
       const dayP = dayPicks.filter(p=>p.result==='P').length;
       const dayPend = dayPicks.length - dayW - dayL - dayP;
+
+      // Hide days where no picks have been resolved yet
+      if (dayW + dayL + dayP === 0) continue;
       let daySummary = `${dayW}-${dayL}`;
       if (dayP > 0) daySummary += `-${dayP}`;
       if (dayPend > 0) daySummary += ` (${dayPend} pending)`;
