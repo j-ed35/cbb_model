@@ -1,10 +1,10 @@
 {
-  "last_updated": "2026-03-10T16:42:00.689733+00:00",
+  "last_updated": "2026-03-11T16:23:17.482709+00:00",
   "overall": {
-    "wins": 7,
-    "losses": 11,
+    "wins": 12,
+    "losses": 15,
     "pushes": 0,
-    "pending": 9
+    "pending": 0
   },
   "days": [
     {
@@ -26,10 +26,10 @@
           "pred_margin": 1.8,
           "edge": 7.3,
           "commence_time": "2026-03-10T16:30:00Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "W",
+          "home_score": 83,
+          "away_score": 79,
+          "cover_margin": 9.5
         },
         {
           "home_team": "Jacksonville St Gamecocks",
@@ -47,10 +47,10 @@
           "pred_margin": 5.0,
           "edge": 6.5,
           "commence_time": "2026-03-11T01:00:00Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "L",
+          "home_score": 63,
+          "away_score": 68,
+          "cover_margin": -3.5
         },
         {
           "home_team": "BYU Cougars",
@@ -68,10 +68,10 @@
           "pred_margin": 16.6,
           "edge": 6.1,
           "commence_time": "2026-03-10T23:00:00Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "W",
+          "home_score": 105,
+          "away_score": 91,
+          "cover_margin": 3.5
         },
         {
           "home_team": "Jackson St Tigers",
@@ -89,10 +89,10 @@
           "pred_margin": -0.6,
           "edge": 5.9,
           "commence_time": "2026-03-11T00:30:15Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "W",
+          "home_score": 68,
+          "away_score": 65,
+          "cover_margin": 9.5
         },
         {
           "home_team": "SMU Mustangs",
@@ -110,10 +110,10 @@
           "pred_margin": 10.2,
           "edge": 5.7,
           "commence_time": "2026-03-10T20:30:08Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "W",
+          "home_score": 86,
+          "away_score": 69,
+          "cover_margin": 12.5
         },
         {
           "home_team": "Prairie View Panthers",
@@ -131,10 +131,10 @@
           "pred_margin": 1.1,
           "edge": -5.4,
           "commence_time": "2026-03-10T18:00:00Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "L",
+          "home_score": 65,
+          "away_score": 56,
+          "cover_margin": -2.5
         },
         {
           "home_team": "Cincinnati Bearcats",
@@ -152,10 +152,10 @@
           "pred_margin": 17.9,
           "edge": 5.4,
           "commence_time": "2026-03-10T19:00:33Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "L",
+          "home_score": 73,
+          "away_score": 66,
+          "cover_margin": -5.5
         },
         {
           "home_team": "Portland St Vikings",
@@ -173,10 +173,10 @@
           "pred_margin": 7.9,
           "edge": 5.4,
           "commence_time": "2026-03-11T01:00:59Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "L",
+          "home_score": 72,
+          "away_score": 75,
+          "cover_margin": -5.5
         },
         {
           "home_team": "Vermont Catamounts",
@@ -194,10 +194,10 @@
           "pred_margin": 5.2,
           "edge": -5.3,
           "commence_time": "2026-03-10T23:00:00Z",
-          "result": null,
-          "home_score": null,
-          "away_score": null,
-          "cover_margin": null
+          "result": "W",
+          "home_score": 63,
+          "away_score": 54,
+          "cover_margin": 1.5
         }
       ]
     },
