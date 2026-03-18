@@ -6,7 +6,7 @@
 Model was 23-29-1 (44.2% ATS) heading into March Madness. Needed >52.4% to be profitable.
 Key issue: model systematically **overpredicts margins for favorites** (e.g., predicted AKR by 17.3, actual by 3).
 
-### Changes Made (all committed, ready to use)
+### Changes Made (Phase 1 — committed)
 
 #### 1. Feature Engineering - `src/cbb/features/enhanced_features.py`
 - Added **tournament context features**: `is_conference_tourney` (early March games) and `is_postseason` (late March/April + PST game type)
@@ -28,6 +28,33 @@ Key issue: model systematically **overpredicts margins for favorites** (e.g., pr
 #### 4. Evaluation - `src/cbb/utils/evaluation.py`
 - Added `tune_threshold_bootstrap()` - uses 500 bootstrap resamples for robust threshold selection
 - Lowered `min_bets` default from 50 to 30 in `tune_threshold()`
+
+### Changes Made (Phase 2 — optimization)
+
+#### 5. Edge Cap Strategy (HIGH IMPACT) - DONE
+**Problem**: Edge bucket analysis showed small edges (0-3 pts) hit at ~54%, but large edges (4+ pts) hit at <50%. The old threshold logic ("bet only when |edge| >= threshold") was backwards.
+
+**Solution**: Added `edge_cap` parameter throughout the pipeline:
+- `evaluation.py`: `evaluate_ats()`, `tune_threshold()`, `tune_threshold_bootstrap()` all accept `edge_cap` parameter
+- `evaluation.py`: New `tune_edge_cap()` function finds optimal max edge on validation set
+- `predict_daily.py`: Picks now filtered by `threshold <= |edge| <= edge_cap` instead of just `|edge| >= threshold`
+- `predict_daily.py`: `--edge-cap` CLI argument for override
+- Model pickle stores `edge_cap=3.0` alongside threshold and shrinkage
+
+#### 6. Bootstrap Threshold Tuning Integrated - DONE
+- `train_enhanced.py` now uses `tune_threshold_bootstrap()` (500 resamples) instead of `tune_threshold()` for more robust threshold selection
+- Also runs `tune_edge_cap()` to find optimal max edge before threshold tuning
+- Both edge_cap and threshold saved in model pickle
+
+#### 7. Shrinkage Applied to Current Model - DONE
+- Updated `gbm.pkl` metadata: shrinkage changed from 1.0 to 0.75
+- This reduces overconfident predictions (the #1 problem identified)
+- Combined with edge_cap=3.0, this should filter out the worst predictions
+
+#### 8. Frontend Updated - DONE
+- `picks.html` ticker now shows edge cap info alongside threshold
+- Pick classification updated: "Strong" = edge 2+, "Pick" = edge 0-2 (was 7+ and 4.5-7)
+- Matches the new small-edge betting strategy
 
 ### Results
 
@@ -60,23 +87,25 @@ Key insight from feature importance: `ew_margin_diff` (exponentially-weighted ma
 
 ## What Still Needs to Be Done
 
-### 1. Rethink Edge Threshold Strategy (HIGH PRIORITY)
-The edge bucket analysis shows the model should bet on **small edges** not large ones. The current threshold logic (bet only when |edge| >= threshold) is backwards for this model. Consider:
-- **Inverting**: Only bet when |edge| < 3 (small disagreements with market)
-- **Capping**: Bet when 0 < |edge| < 3, skip when |edge| > 5
-- This is the single most impactful finding from the tuning run
+### 1. Retrain with Default Params (RECOMMENDED)
+The current `gbm.pkl` uses the tuned hyperparams (n_est=500, depth=5, lr=0.08) which showed overfitting. Retraining with default params (n_est=200, depth=4, lr=0.05) + the new edge cap/bootstrap tuning would likely generalize better. Run:
+```bash
+python -m src.cbb.train_enhanced
+```
+This will automatically:
+- Use bootstrap threshold tuning
+- Find optimal edge cap
+- Apply shrinkage
+- Save everything to `gbm.pkl`
 
-### 2. Integrate Bootstrap Threshold Tuning
-`tune_threshold_bootstrap()` was added to `evaluation.py` but isn't wired into `train_enhanced.py` yet. Replace the `tune_threshold()` call with `tune_threshold_bootstrap()` in the training script to get more robust thresholds.
-
-### 3. Address Overfitting
+### 2. Address Overfitting
 The tuned model shows clear overfitting (train 82.2% vs val 52.1%). Consider:
-- Increase `min_samples_leaf` (currently 15, try 30-50)
+- Increase `min_samples_leaf` (currently 25, try 30-50)
 - Reduce `max_depth` to 3
 - Add `max_features` parameter (e.g., 0.7) for column subsampling
 - Or simply use the default-param model with shrinkage=0.75 (less overfitting)
 
-### 4. Consider Reducing Feature Redundancy
+### 3. Consider Reducing Feature Redundancy
 Feature importance shows `ew_margin_diff` dominates (48%). This is computed from recent game results — essentially a "hot hand" indicator. Consider:
 - Is this feature leaking future info? It uses `.shift(1)` so it should be safe, but verify
 - The KenPom features (which are the core of the model) only contribute ~25% total. The model may be over-relying on recent form
@@ -89,17 +118,7 @@ The raw data has almost **zero neutral site flags** across all seasons:
 - Conference tournament and NCAA tournament games are incorrectly labeled as Home/Away
 - Consider augmenting raw data with known neutral-site game lists, or flagging all March games as pseudo-neutral
 
-### 5. Test the Model Live
-Once tuning is done and the model is saved:
-```bash
-python -m src.cbb.predict_daily --json --html
-```
-Check that:
-- Predictions are less extreme (margins closer to actual spreads)
-- Shrinkage is being applied
-- Tournament context features are set correctly for postseason games
-
-### 6. Future Improvements (Lower Priority)
+### 5. Future Improvements (Lower Priority)
 - **XGBoost**: Replace sklearn GBM with XGBoost for better regularization and speed
 - **Four Factors features**: Extended KenPom data (eFG%, TO%, OR%, FTR) exists in `data/kenpom_extended/` but isn't in the model. Run `build_features_v2.py` to add them
 - **Team-specific HCA**: `merge_hca_vectorized()` in `build_features_v2.py` can replace the fixed 3.5 HCA
@@ -109,9 +128,9 @@ Check that:
 | File | Purpose |
 |------|---------|
 | `src/cbb/features/enhanced_features.py` | Feature engineering pipeline |
-| `src/cbb/train_enhanced.py` | Model training + shrinkage + tuning |
-| `src/cbb/predict_daily.py` | Daily prediction with live data |
-| `src/cbb/utils/evaluation.py` | ATS evaluation + threshold tuning |
+| `src/cbb/train_enhanced.py` | Model training + shrinkage + edge cap + bootstrap tuning |
+| `src/cbb/predict_daily.py` | Daily prediction with live data + edge cap filtering |
+| `src/cbb/utils/evaluation.py` | ATS evaluation + threshold tuning + edge cap tuning |
 | `src/cbb/features/build_features_v2.py` | Extended features (Four Factors, HCA) |
 | `reports/models/gbm.pkl` | Trained model pickle |
 | `data/features/games_features_enhanced.parquet` | Feature dataset |
@@ -122,7 +141,7 @@ Check that:
 python -m src.cbb.ingest.build_games
 python -m src.cbb.features.enhanced_features
 
-# Train with default params
+# Train with default params (recommended)
 python -m src.cbb.train_enhanced
 
 # Train with hyperparameter search
@@ -130,4 +149,7 @@ python -m src.cbb.train_enhanced --tune
 
 # Generate daily predictions
 python -m src.cbb.predict_daily --json --html
+
+# Override edge cap at runtime
+python -m src.cbb.predict_daily --json --edge-cap 2.5
 ```

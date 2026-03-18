@@ -317,20 +317,15 @@ def generate_predictions(
         spread = pd.to_numeric(row["spread_home"], errors="coerce")
         edge = pred_margin - (-spread) if pd.notna(spread) else np.nan
 
-        # Cap absurd edges — usually indicates bad data from the Odds API
-        MAX_EDGE = 15.0
-        if pd.notna(edge) and abs(edge) > MAX_EDGE:
-            pick = "SKIP"
-            base.update({
-                "pred_margin": pred_margin, "edge": edge,
-                "pick": pick, "home_kp": home_kp, "away_kp": away_kp,
-            })
-            results.append(base)
-            continue
+        # Edge cap: skip overconfident predictions (large edges are noise).
+        # Edge bucket analysis shows 0-3pt edges hit ~54%, while 4+ pt edges hit <50%.
+        edge_cap = model_data.get("edge_cap")
 
         if pd.isna(edge):
             pick = "NO LINE"
         elif abs(edge) < threshold:
+            pick = "SKIP"
+        elif edge_cap is not None and abs(edge) > edge_cap:
             pick = "SKIP"
         elif edge > 0:
             pick = f"{row['home_team']} {spread:+.1f}"
@@ -385,15 +380,16 @@ def _kenpom_profile(team_name: str, kp_name: str, ratings: pd.DataFrame) -> dict
     }
 
 
-def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.DataFrame = None) -> dict:
+def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.DataFrame = None, edge_cap: float = None) -> dict:
     """Convert predictions DataFrame to JSON-serializable dict for the API."""
     from src.cbb.utils.espn_ids import get_logo_url, get_abbrev, get_espn_id
 
-    MAX_EDGE = 15.0
     games = []
     for _, row in pred_df.iterrows():
         edge = row.get("edge")
-        if pd.isna(edge) or abs(edge) < threshold or abs(edge) > MAX_EDGE:
+        if pd.isna(edge) or abs(edge) < threshold:
+            continue
+        if edge_cap is not None and abs(edge) > edge_cap:
             continue
 
         spread = row.get("spread_home")
@@ -458,7 +454,10 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.Dat
         }
 
         # Add pick info if this game qualifies
-        if has_pred and abs(edge) >= threshold and abs(edge) <= MAX_EDGE:
+        qualifies = has_pred and abs(edge) >= threshold
+        if edge_cap is not None and has_pred:
+            qualifies = qualifies and abs(edge) <= edge_cap
+        if qualifies:
             if edge > 0:
                 pick_team = row["home_team"]
                 pick_spread = f"{spread:+.1f}" if pd.notna(spread) else ""
@@ -478,7 +477,7 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.Dat
 
         all_games.append(game)
 
-    return {
+    result = {
         "date": str(date.today()),
         "generated": datetime.now().isoformat(),
         "threshold": threshold,
@@ -487,9 +486,12 @@ def predictions_to_json(pred_df: pd.DataFrame, threshold: float, ratings: pd.Dat
         "games": games,
         "all_games": all_games,
     }
+    if edge_cap is not None:
+        result["edge_cap"] = edge_cap
+    return result
 
 
-def display_predictions(pred_df: pd.DataFrame, threshold: float) -> None:
+def display_predictions(pred_df: pd.DataFrame, threshold: float, edge_cap: float = None) -> None:
     """Display predictions in a formatted table."""
     table = Table(title=f"CBB Predictions - {date.today()}")
     table.add_column("Away", style="cyan")
@@ -511,9 +513,16 @@ def display_predictions(pred_df: pd.DataFrame, threshold: float) -> None:
 
     console.print(table)
 
-    actionable = pred_df[pred_df["edge"].abs() >= threshold] if "edge" in pred_df else pd.DataFrame()
+    if "edge" in pred_df:
+        mask = pred_df["edge"].abs() >= threshold
+        if edge_cap is not None:
+            mask = mask & (pred_df["edge"].abs() <= edge_cap)
+        actionable = pred_df[mask]
+    else:
+        actionable = pd.DataFrame()
     console.print(f"\n[bold]Total games:[/bold] {len(pred_df)}")
-    console.print(f"[bold]Picks (|edge| >= {threshold}):[/bold] {len(actionable)}")
+    cap_str = f", |edge| <= {edge_cap}" if edge_cap else ""
+    console.print(f"[bold]Picks (|edge| >= {threshold}{cap_str}):[/bold] {len(actionable)}")
 
 
 def main():
@@ -521,6 +530,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Generate daily CBB predictions")
     parser.add_argument("--threshold", type=float, default=None, help="Edge threshold (default: from model)")
+    parser.add_argument("--edge-cap", type=float, default=None, help="Max edge to bet (default: from model)")
     parser.add_argument("--save", action="store_true", help="Save predictions CSV")
     parser.add_argument("--html", action="store_true", help="Generate HTML page")
     parser.add_argument("--json", action="store_true", help="Print JSON output")
@@ -548,7 +558,10 @@ def main():
 
     # Load model
     model_data = load_model(models_dir)
-    threshold = args.threshold or model_data.get("threshold", 4.5)
+    threshold = args.threshold if args.threshold is not None else model_data.get("threshold", 0.0)
+    edge_cap_val = args.edge_cap if args.edge_cap is not None else model_data.get("edge_cap")
+    # Store edge_cap in model_data so generate_predictions can access it
+    model_data["edge_cap"] = edge_cap_val
 
     # Fetch data
     ratings = fetch_kenpom_live()
@@ -574,7 +587,7 @@ def main():
 
     # Predict
     pred_df = generate_predictions(ratings, games_df, team_map, model_data, threshold)
-    display_predictions(pred_df, threshold)
+    display_predictions(pred_df, threshold, edge_cap=edge_cap_val)
 
     if args.save:
         out = predictions_dir / f"predictions_{date.today()}.csv"
@@ -582,7 +595,7 @@ def main():
         console.print(f"[green]Saved: {out}[/green]")
 
     if args.json:
-        result = predictions_to_json(pred_df, threshold, ratings)
+        result = predictions_to_json(pred_df, threshold, ratings, edge_cap=edge_cap_val)
         # Save to docs/data for GitHub Pages
         json_dir = project_root / "docs" / "data"
         json_dir.mkdir(parents=True, exist_ok=True)

@@ -561,8 +561,8 @@
     <button class="ctrl-btn active" data-sort="edge" onclick="setSort('edge')">Best Edge</button>
     <button class="ctrl-btn" data-sort="time" onclick="setSort('time')">Game Time</button>
     <div class="legend">
-      <span><span class="legend-swatch sw-strong"></span>Strong (edge 7+)</span>
-      <span><span class="legend-swatch sw-regular"></span>Pick (edge 4.5-7)</span>
+      <span><span class="legend-swatch sw-strong"></span>Strong (edge 2+)</span>
+      <span><span class="legend-swatch sw-regular"></span>Pick (edge 0-2)</span>
     </div>
   </div>
 
@@ -897,7 +897,7 @@
       }
       return `<div class="pick-box pick-none">No data</div>`;
     }
-    const cls = Math.abs(g.edge) >= 7 ? 'pick-strong' : 'pick-regular';
+    const cls = Math.abs(g.edge) >= 2 ? 'pick-strong' : 'pick-regular';
     const logo = g.pick_logo
       ? `<img class="pick-logo" src="${g.pick_logo}" alt="" onerror="this.style.display='none'">`
       : '';
@@ -1204,8 +1204,9 @@
     if (picksData) {
       document.getElementById('ticker-picks').textContent =
         `${picksData.picks_count || 0} PICKS TODAY (${picksData.total_games || 0} GAMES)`;
+      const capStr = picksData.edge_cap ? ` | CAP: ${picksData.edge_cap}` : '';
       document.getElementById('ticker-threshold').textContent =
-        `EDGE THRESHOLD: ${picksData.threshold || 4.5}`;
+        `EDGE THRESHOLD: ${picksData.threshold || 0}${capStr}`;
     }
 
     if (historyData) {

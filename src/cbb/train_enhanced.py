@@ -28,7 +28,7 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 
 from src.cbb.features.prepare import prepare_ats_data
-from src.cbb.utils.evaluation import evaluate_ats, tune_threshold, analyze_by_edge_bucket
+from src.cbb.utils.evaluation import evaluate_ats, tune_threshold_bootstrap, tune_edge_cap, analyze_by_edge_bucket
 
 
 # Expanded feature set
@@ -212,28 +212,8 @@ def main() -> None:
         )
         print(f"\n{name}: MAE={metrics['mae']:.2f} | Hit Rate={metrics['hit_rate']:.3f} | ROI={metrics['roi']:+.3f}")
 
-    # Tune threshold on validation (with shrinkage)
-    val_preds = gbm.predict(val_df[available_cols].values) * best_shrinkage
-    best_threshold, val_metrics = tune_threshold(
-        predictions=val_preds,
-        spreads=val_df["spread_a"].values,
-        covers=val_df["cover_a"].values,
-        min_bets=30,
-    )
-    print(f"\nBest threshold (val): {best_threshold}")
-    print(f"  Val: Hit Rate={val_metrics['hit_rate']:.3f} | ROI={val_metrics['roi']:+.3f} | N={val_metrics['n_bets']}")
-
-    # Apply to test
+    # Edge bucket analysis on test (run first to inform threshold/cap tuning)
     test_preds = gbm.predict(test_df[available_cols].values) * best_shrinkage
-    test_metrics = evaluate_ats(
-        predictions=test_preds,
-        spreads=test_df["spread_a"].values,
-        covers=test_df["cover_a"].values,
-        threshold=best_threshold,
-    )
-    print(f"  Test: Hit Rate={test_metrics['hit_rate']:.3f} | ROI={test_metrics['roi']:+.3f} | N={test_metrics['n_bets']}")
-
-    # Edge bucket analysis on test
     print("\nEdge bucket analysis (test):")
     buckets = analyze_by_edge_bucket(
         predictions=test_preds,
@@ -243,15 +223,54 @@ def main() -> None:
     for b in buckets:
         print(f"  {b['bucket']:>8s}: {b['hit_rate']:.3f} hit rate ({b['n_games']} games) ROI={b['roi']:+.3f}")
 
+    # Tune edge cap on validation (with shrinkage)
+    # Small edges outperform large edges, so we cap max edge to filter noise
+    val_preds = gbm.predict(val_df[available_cols].values) * best_shrinkage
+    best_edge_cap, cap_metrics = tune_edge_cap(
+        predictions=val_preds,
+        spreads=val_df["spread_a"].values,
+        covers=val_df["cover_a"].values,
+        threshold=0.0,
+        min_bets=30,
+    )
+    print(f"\nBest edge cap (val): {best_edge_cap}")
+    if best_edge_cap is not None:
+        print(f"  Val: Hit Rate={cap_metrics['hit_rate']:.3f} | ROI={cap_metrics['roi']:+.3f} | N={cap_metrics['n_bets']}")
+
+    # Tune threshold using bootstrap resampling (more robust than single-sample)
+    best_threshold, val_metrics = tune_threshold_bootstrap(
+        predictions=val_preds,
+        spreads=val_df["spread_a"].values,
+        covers=val_df["cover_a"].values,
+        min_bets=30,
+        edge_cap=best_edge_cap,
+    )
+    print(f"\nBest threshold (val, bootstrap): {best_threshold}")
+    print(f"  Val: Hit Rate={val_metrics['hit_rate']:.3f} | ROI={val_metrics['roi']:+.3f} | N={val_metrics['n_bets']}")
+
+    # Apply to test
+    test_metrics = evaluate_ats(
+        predictions=test_preds,
+        spreads=test_df["spread_a"].values,
+        covers=test_df["cover_a"].values,
+        threshold=best_threshold,
+        edge_cap=best_edge_cap,
+    )
+    cap_str = f", cap={best_edge_cap}" if best_edge_cap else ""
+    print(f"  Test (threshold={best_threshold}{cap_str}): Hit Rate={test_metrics['hit_rate']:.3f} | ROI={test_metrics['roi']:+.3f} | N={test_metrics['n_bets']}")
+
     # Save model
     model_path = models_dir / "gbm.pkl"
+    save_data = {
+        "model": gbm,
+        "feature_cols": available_cols,
+        "threshold": best_threshold,
+        "shrinkage": best_shrinkage,
+    }
+    if best_edge_cap is not None:
+        save_data["edge_cap"] = best_edge_cap
     with open(model_path, "wb") as f:
-        pickle.dump({
-            "model": gbm,
-            "feature_cols": available_cols,
-            "threshold": best_threshold,
-            "shrinkage": best_shrinkage,
-        }, f)
+        pickle.dump(save_data, f)
     print(f"\nSaved model to {model_path}")
 
 

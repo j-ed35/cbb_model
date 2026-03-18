@@ -38,6 +38,7 @@ def evaluate_ats(
     margins: Optional[np.ndarray] = None,
     covers: Optional[np.ndarray] = None,
     threshold: float = 0.0,
+    edge_cap: Optional[float] = None,
     juice: float = -110,
 ) -> dict:
     """
@@ -53,6 +54,9 @@ def evaluate_ats(
         covers: Actual cover results (1=cover, 0=no cover, 0.5=push)
                 If not provided, computed from margins and spreads
         threshold: Minimum absolute edge to place bet (0 = bet all games)
+        edge_cap: Maximum absolute edge to place bet (None = no cap).
+                  Edge bucket analysis shows small edges (0-3 pts) outperform
+                  large edges, so capping filters out overconfident predictions.
         juice: Vig/juice for ROI calculation (default -110)
 
     Returns:
@@ -87,6 +91,9 @@ def evaluate_ats(
 
     # Apply threshold - only bet when |edge| >= threshold
     bet_mask = np.abs(valid_edge) >= threshold
+    # Apply edge cap - skip overconfident predictions (large edges are noise)
+    if edge_cap is not None:
+        bet_mask = bet_mask & (np.abs(valid_edge) <= edge_cap)
 
     result = {
         "n_games": len(predictions),
@@ -165,6 +172,7 @@ def tune_threshold(
     covers: np.ndarray,
     min_bets: int = 30,
     thresholds: Optional[list[float]] = None,
+    edge_cap: Optional[float] = None,
 ) -> tuple[float, dict]:
     """
     Find optimal edge threshold on validation set.
@@ -175,6 +183,7 @@ def tune_threshold(
         covers: Actual cover results
         min_bets: Minimum number of bets required for a valid threshold
         thresholds: List of thresholds to try (default: 0 to 7 in 0.5 steps)
+        edge_cap: Maximum absolute edge (None = no cap)
 
     Returns:
         Tuple of (best_threshold, best_metrics)
@@ -192,6 +201,7 @@ def tune_threshold(
             spreads=spreads,
             covers=covers,
             threshold=threshold,
+            edge_cap=edge_cap,
         )
         if metrics["n_bets"] >= min_bets and metrics["roi"] > best_roi:
             best_roi = metrics["roi"]
@@ -199,7 +209,7 @@ def tune_threshold(
             best_metrics = metrics
 
     if best_metrics is None:
-        best_metrics = evaluate_ats(predictions, spreads, covers, threshold=0.0)
+        best_metrics = evaluate_ats(predictions, spreads, covers, threshold=0.0, edge_cap=edge_cap)
 
     return best_threshold, best_metrics
 
@@ -211,6 +221,7 @@ def tune_threshold_bootstrap(
     n_bootstrap: int = 500,
     min_bets: int = 30,
     thresholds: Optional[list[float]] = None,
+    edge_cap: Optional[float] = None,
     rng_seed: int = 42,
 ) -> tuple[float, dict]:
     """
@@ -227,6 +238,7 @@ def tune_threshold_bootstrap(
         n_bootstrap: Number of bootstrap samples
         min_bets: Minimum bets per sample
         thresholds: Thresholds to test
+        edge_cap: Maximum absolute edge (None = no cap)
         rng_seed: Random seed for reproducibility
 
     Returns:
@@ -249,6 +261,7 @@ def tune_threshold_bootstrap(
                 spreads=spreads[idx],
                 covers=covers[idx],
                 threshold=threshold,
+                edge_cap=edge_cap,
             )
             if metrics["n_bets"] >= min_bets:
                 rois.append(metrics["roi"])
@@ -270,8 +283,71 @@ def tune_threshold_bootstrap(
             best_threshold = threshold
 
     # Return full-data metrics at selected threshold
-    best_metrics = evaluate_ats(predictions, spreads, covers, threshold=best_threshold)
+    best_metrics = evaluate_ats(predictions, spreads, covers, threshold=best_threshold, edge_cap=edge_cap)
     return best_threshold, best_metrics
+
+
+def tune_edge_cap(
+    predictions: np.ndarray,
+    spreads: np.ndarray,
+    covers: np.ndarray,
+    threshold: float = 0.0,
+    min_bets: int = 30,
+    caps: Optional[list[float]] = None,
+) -> tuple[Optional[float], dict]:
+    """
+    Find optimal edge cap on validation set.
+
+    Edge bucket analysis shows small edges outperform large edges.
+    This finds the best maximum edge to bet on.
+
+    Args:
+        predictions: Predicted margins
+        spreads: Point spreads
+        covers: Actual cover results
+        threshold: Minimum edge threshold (already tuned)
+        min_bets: Minimum bets required
+        caps: Edge caps to try (default: 2.0 to 7.0 in 0.5 steps, plus None)
+
+    Returns:
+        Tuple of (best_edge_cap, best_metrics). best_edge_cap=None means no cap.
+    """
+    if caps is None:
+        caps = [i * 0.5 for i in range(4, 15)]  # 2.0 to 7.0
+
+    best_roi = -np.inf
+    best_cap = None
+    best_metrics = None
+
+    # Test each cap value
+    for cap in caps:
+        metrics = evaluate_ats(
+            predictions=predictions,
+            spreads=spreads,
+            covers=covers,
+            threshold=threshold,
+            edge_cap=cap,
+        )
+        if metrics["n_bets"] >= min_bets and metrics["roi"] > best_roi:
+            best_roi = metrics["roi"]
+            best_cap = cap
+            best_metrics = metrics
+
+    # Also test no cap
+    metrics_no_cap = evaluate_ats(
+        predictions=predictions,
+        spreads=spreads,
+        covers=covers,
+        threshold=threshold,
+    )
+    if metrics_no_cap["n_bets"] >= min_bets and metrics_no_cap["roi"] > best_roi:
+        best_cap = None
+        best_metrics = metrics_no_cap
+
+    if best_metrics is None:
+        best_metrics = metrics_no_cap
+
+    return best_cap, best_metrics
 
 
 def analyze_by_edge_bucket(
