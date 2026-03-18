@@ -499,6 +499,28 @@ def build_enhanced_features(
     df["is_home_a"] = (~df["is_neutral"]).astype(int)
     df["is_neutral"] = df["is_neutral"].astype(int)
 
+    # Add tournament context features using date-based heuristics
+    # Raw data lacks reliable neutral-site flags, so use calendar dates:
+    #   - Conference tournaments: early March (days 1-16)
+    #   - NCAA tournament / postseason: mid-March onward (day 17+) through April
+    if "date" in df.columns:
+        dt = pd.to_datetime(df["date"])
+        month = dt.dt.month
+        day = dt.dt.day
+        is_march = month == 3
+        df["is_conference_tourney"] = (is_march & (day <= 16)).astype(int)
+        # Postseason: late March + April, or explicit PST game_type
+        is_late_march_plus = (is_march & (day >= 17)) | (month == 4)
+        if "game_type" in df.columns:
+            df["is_postseason"] = (
+                is_late_march_plus | (df["game_type"] == "PST")
+            ).astype(int)
+        else:
+            df["is_postseason"] = is_late_march_plus.astype(int)
+    else:
+        df["is_conference_tourney"] = 0
+        df["is_postseason"] = 0
+
     # Add home court advantage adjusted prediction
     HCA = 3.5  # Home court advantage in points
     if "kp_pred_margin_raw" in df.columns:
@@ -520,6 +542,7 @@ def build_enhanced_features(
         "cover_a",
     ]
     kenpom_cols = [c for c in df.columns if c.startswith("kp_")]
+    context_cols = ["is_conference_tourney", "is_postseason"]
     rest_cols = ["rest_days_a", "rest_days_b", "rest_diff", "b2b_a", "b2b_b"]
     rolling_cols = ["rolling_ats_a", "rolling_ats_b", "rolling_ats_diff"]
     ew_cols = ["ew_margin_a", "ew_margin_b", "ew_ppg_a", "ew_ppg_b", "ew_margin_diff"]
@@ -533,7 +556,7 @@ def build_enhanced_features(
     market_cols = [c for c in market_cols if c in df.columns]
 
     # Ensure all columns exist
-    all_cols = core_cols + kenpom_cols + rest_cols + rolling_cols + ew_cols + market_cols
+    all_cols = core_cols + context_cols + kenpom_cols + rest_cols + rolling_cols + ew_cols + market_cols
     available_cols = [c for c in all_cols if c in df.columns]
 
     # Add any extra columns not in our list

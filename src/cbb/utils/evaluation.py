@@ -163,7 +163,7 @@ def tune_threshold(
     predictions: np.ndarray,
     spreads: np.ndarray,
     covers: np.ndarray,
-    min_bets: int = 50,
+    min_bets: int = 30,
     thresholds: Optional[list[float]] = None,
 ) -> tuple[float, dict]:
     """
@@ -201,6 +201,76 @@ def tune_threshold(
     if best_metrics is None:
         best_metrics = evaluate_ats(predictions, spreads, covers, threshold=0.0)
 
+    return best_threshold, best_metrics
+
+
+def tune_threshold_bootstrap(
+    predictions: np.ndarray,
+    spreads: np.ndarray,
+    covers: np.ndarray,
+    n_bootstrap: int = 500,
+    min_bets: int = 30,
+    thresholds: Optional[list[float]] = None,
+    rng_seed: int = 42,
+) -> tuple[float, dict]:
+    """
+    Tune threshold using bootstrap resampling for robustness.
+
+    Instead of picking the threshold with best ROI on a single sample,
+    evaluates each threshold across bootstrap resamples and picks the one
+    with the best median ROI where the 25th percentile is above -0.05.
+
+    Args:
+        predictions: Predicted margins
+        spreads: Point spreads
+        covers: Actual cover results
+        n_bootstrap: Number of bootstrap samples
+        min_bets: Minimum bets per sample
+        thresholds: Thresholds to test
+        rng_seed: Random seed for reproducibility
+
+    Returns:
+        Tuple of (best_threshold, best_metrics_on_full_data)
+    """
+    if thresholds is None:
+        thresholds = [i * 0.5 for i in range(15)]  # 0.0 to 7.0
+
+    rng = np.random.RandomState(rng_seed)
+    n = len(predictions)
+
+    threshold_stats = {}
+    for threshold in thresholds:
+        rois = []
+        hit_rates = []
+        for _ in range(n_bootstrap):
+            idx = rng.choice(n, size=n, replace=True)
+            metrics = evaluate_ats(
+                predictions=predictions[idx],
+                spreads=spreads[idx],
+                covers=covers[idx],
+                threshold=threshold,
+            )
+            if metrics["n_bets"] >= min_bets:
+                rois.append(metrics["roi"])
+                hit_rates.append(metrics["hit_rate"])
+
+        if len(rois) >= n_bootstrap * 0.5:  # Need at least half of samples valid
+            threshold_stats[threshold] = {
+                "median_roi": float(np.median(rois)),
+                "p25_roi": float(np.percentile(rois, 25)),
+                "median_hit_rate": float(np.median(hit_rates)),
+            }
+
+    # Pick best: highest median ROI where 25th percentile > -0.05
+    best_threshold = 0.0
+    best_median_roi = -np.inf
+    for threshold, stats in threshold_stats.items():
+        if stats["p25_roi"] > -0.05 and stats["median_roi"] > best_median_roi:
+            best_median_roi = stats["median_roi"]
+            best_threshold = threshold
+
+    # Return full-data metrics at selected threshold
+    best_metrics = evaluate_ats(predictions, spreads, covers, threshold=best_threshold)
     return best_threshold, best_metrics
 
 

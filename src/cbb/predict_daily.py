@@ -23,17 +23,42 @@ from rich.table import Table
 
 console = Console()
 
-# Same features used in training
+# Same features used in training (expanded set)
 FEATURES = [
+    # KenPom core (8)
     "kp_adj_em_a", "kp_adj_em_b",
     "kp_adj_o_a", "kp_adj_o_b",
     "kp_adj_d_a", "kp_adj_d_b",
     "kp_tempo_a", "kp_tempo_b",
+    # KenPom derived (5)
     "kp_adj_em_diff",
     "kp_tempo_avg", "kp_tempo_diff",
     "kp_o_vs_d_a", "kp_o_vs_d_b",
+    # Context (2)
     "is_home_a", "is_neutral",
+    # Game context (2)
+    "is_conference_tourney", "is_postseason",
+    # Rest/situational (3)
+    "rest_days_a", "rest_days_b", "rest_diff",
+    # Recency (3)
+    "ew_margin_a", "ew_margin_b", "ew_margin_diff",
+    # Rolling ATS (2)
+    "rolling_ats_a", "rolling_ats_b",
 ]
+
+# Neutral defaults for features not available at live inference time
+INFERENCE_DEFAULTS = {
+    "is_conference_tourney": 0,
+    "is_postseason": 0,
+    "rest_days_a": 7.0,
+    "rest_days_b": 7.0,
+    "rest_diff": 0.0,
+    "ew_margin_a": 0.0,
+    "ew_margin_b": 0.0,
+    "ew_margin_diff": 0.0,
+    "rolling_ats_a": 0.5,
+    "rolling_ats_b": 0.5,
+}
 
 
 def load_model(models_dir: Path) -> dict:
@@ -224,7 +249,7 @@ def extract_features(home_kp: str, away_kp: str, ratings: pd.DataFrame, is_neutr
     t_a = f(row_a, "AdjTempo")
     t_b = f(row_b, "AdjTempo")
 
-    return {
+    features = {
         "kp_adj_em_a": em_a, "kp_adj_em_b": em_b,
         "kp_adj_o_a": o_a, "kp_adj_o_b": o_b,
         "kp_adj_d_a": d_a, "kp_adj_d_b": d_b,
@@ -238,6 +263,15 @@ def extract_features(home_kp: str, away_kp: str, ratings: pd.DataFrame, is_neutr
         "is_neutral": 1 if is_neutral else 0,
     }
 
+    # Add defaults for features not available at live inference
+    features.update(INFERENCE_DEFAULTS)
+
+    # Override tournament context: neutral site games during March are postseason
+    if is_neutral:
+        features["is_postseason"] = 1
+
+    return features
+
 
 def generate_predictions(
     ratings: pd.DataFrame,
@@ -249,6 +283,7 @@ def generate_predictions(
     """Generate predictions for all games."""
     gbm = model_data["model"]
     feature_cols = model_data["feature_cols"]
+    shrinkage = model_data.get("shrinkage", 1.0)
     kenpom_teams = set(ratings["TeamName" if "TeamName" in ratings.columns else "Team"].unique())
 
     results = []
@@ -277,7 +312,7 @@ def generate_predictions(
 
         X = np.array([[features.get(c, 0) for c in feature_cols]])
         X = np.nan_to_num(X, nan=0)
-        pred_margin = gbm.predict(X)[0]
+        pred_margin = gbm.predict(X)[0] * shrinkage
 
         spread = pd.to_numeric(row["spread_home"], errors="coerce")
         edge = pred_margin - (-spread) if pd.notna(spread) else np.nan
