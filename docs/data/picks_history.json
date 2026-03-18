@@ -1,12 +1,59 @@
 {
-  "last_updated": "2026-03-16T13:33:08.578761+00:00",
+  "last_updated": "2026-03-18T18:30:58.504017+00:00",
   "overall": {
-    "wins": 23,
-    "losses": 29,
+    "wins": 24,
+    "losses": 30,
     "pushes": 1,
     "pending": 1
   },
   "days": [
+    {
+      "date": "2026-03-17",
+      "picks": [
+        {
+          "home_team": "Texas Longhorns",
+          "away_team": "NC State Wolfpack",
+          "home_abbrev": "TEX",
+          "away_abbrev": "NCST",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/251.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/152.png&w=40&h=40",
+          "home_espn_id": 251,
+          "away_espn_id": 152,
+          "pick_team": "Texas Longhorns",
+          "pick_abbrev": "TEX",
+          "pick_spread": "+1.5",
+          "spread_home": 1.5,
+          "pred_margin": 7.6,
+          "edge": 9.1,
+          "commence_time": "2026-03-18T01:15:00Z",
+          "result": "L",
+          "home_score": 66,
+          "away_score": 68,
+          "cover_margin": -0.5
+        },
+        {
+          "home_team": "Howard Bison",
+          "away_team": "UMBC Retrievers",
+          "home_abbrev": "HOW",
+          "away_abbrev": "UMBC",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/47.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2378.png&w=40&h=40",
+          "home_espn_id": 47,
+          "away_espn_id": 2378,
+          "pick_team": "Howard Bison",
+          "pick_abbrev": "HOW",
+          "pick_spread": "+2.5",
+          "spread_home": 2.5,
+          "pred_margin": 5.7,
+          "edge": 8.2,
+          "commence_time": "2026-03-17T22:40:00Z",
+          "result": "W",
+          "home_score": 86,
+          "away_score": 83,
+          "cover_margin": 5.5
+        }
+      ]
+    },
     {
       "date": "2026-03-14",
       "picks": [
