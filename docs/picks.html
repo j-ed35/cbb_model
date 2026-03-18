@@ -561,8 +561,8 @@
     <button class="ctrl-btn active" data-sort="edge" onclick="setSort('edge')">Best Edge</button>
     <button class="ctrl-btn" data-sort="time" onclick="setSort('time')">Game Time</button>
     <div class="legend">
-      <span><span class="legend-swatch sw-strong"></span>Strong (edge 2+)</span>
-      <span><span class="legend-swatch sw-regular"></span>Pick (edge 0-2)</span>
+      <span><span class="legend-swatch sw-strong"></span>Strong (edge 1.5+)</span>
+      <span><span class="legend-swatch sw-regular"></span>Pick (edge 1-1.5)</span>
     </div>
   </div>
 
@@ -897,7 +897,7 @@
       }
       return `<div class="pick-box pick-none">No data</div>`;
     }
-    const cls = Math.abs(g.edge) >= 2 ? 'pick-strong' : 'pick-regular';
+    const cls = Math.abs(g.edge) >= 1.5 ? 'pick-strong' : 'pick-regular';
     const logo = g.pick_logo
       ? `<img class="pick-logo" src="${g.pick_logo}" alt="" onerror="this.style.display='none'">`
       : '';

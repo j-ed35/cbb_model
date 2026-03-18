@@ -495,10 +495,6 @@ def build_enhanced_features(
         print("Computing line movement features...")
         df = compute_line_movement_features(df, opening_spreads, closing_spreads, public_betting)
 
-    # Add context features
-    df["is_home_a"] = (~df["is_neutral"]).astype(int)
-    df["is_neutral"] = df["is_neutral"].astype(int)
-
     # Add tournament context features using date-based heuristics
     # Raw data lacks reliable neutral-site flags, so use calendar dates:
     #   - Conference tournaments: early March (days 1-16)
@@ -517,9 +513,23 @@ def build_enhanced_features(
             ).astype(int)
         else:
             df["is_postseason"] = is_late_march_plus.astype(int)
+
+        # Fix neutral site detection: raw data has almost zero neutral flags.
+        # Override is_neutral for tournament games (played at neutral sites):
+        #   - NCAA tournament / postseason games are neutral
+        #   - Conference tournament games are mostly neutral (some early rounds
+        #     at campus sites, but semis/finals at neutral venues)
+        df["is_neutral"] = (
+            df["is_neutral"].astype(bool)
+            | df["is_postseason"].astype(bool)
+            | df["is_conference_tourney"].astype(bool)
+        ).astype(int)
     else:
         df["is_conference_tourney"] = 0
         df["is_postseason"] = 0
+
+    # Add context features: is_home_a depends on corrected is_neutral
+    df["is_home_a"] = (~df["is_neutral"].astype(bool)).astype(int)
 
     # Add home court advantage adjusted prediction
     HCA = 3.5  # Home court advantage in points
