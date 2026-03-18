@@ -29,34 +29,54 @@ Key issue: model systematically **overpredicts margins for favorites** (e.g., pr
 - Added `tune_threshold_bootstrap()` - uses 500 bootstrap resamples for robust threshold selection
 - Lowered `min_bets` default from 50 to 30 in `tune_threshold()`
 
-### Initial Results (default params, no tuning)
+### Results
+
+**Default params (no tuning):**
 ```
 Val:  Hit Rate=0.517 (was 0.504) with shrinkage=0.75
-Test: Hit Rate=0.497 (baseline)
+Test: Hit Rate=0.497
 Best threshold: 3.0 (was 4.5)
 ```
 
-Key insight from feature importance: `ew_margin_diff` (exponentially-weighted margin differential) is the **#1 most important feature** at 48.2% importance — far above KenPom metrics.
+**Tuned params (grid search completed):**
+```
+Best params: n_estimators=500, max_depth=4, lr=0.03, min_samples_leaf=15, subsample=0.8
+Val:  Hit Rate=0.521 with shrinkage=1.0 (no shrinkage needed)
+Test: Hit Rate=0.493
+Best threshold: 0.0 (bet everything)
+```
+
+**Critical finding from edge bucket analysis (test set):**
+```
+0-1 pts edge: 55.0% hit rate (278 games) -- BEST
+1-2 pts edge: 52.5% hit rate (284 games) -- PROFITABLE
+2-3 pts edge: 49.6% hit rate (280 games)
+4-5 pts edge: 45.6% hit rate (237 games) -- WORST
+5-7 pts edge: 46.2% hit rate (331 games)
+```
+**Small edges outperform large edges.** The model is most accurate when it disagrees slightly with the market. Large edges are noise/overconfidence.
+
+Key insight from feature importance: `ew_margin_diff` (exponentially-weighted margin differential) is the **#1 most important feature** at 48.2% importance — far above KenPom metrics. The tuned model shows slight overfitting (train MAE=5.34 vs val MAE=9.86).
 
 ## What Still Needs to Be Done
 
-### 1. Finish Hyperparameter Tuning (HIGH PRIORITY)
-The `--tune` grid search was running when the session ended. Re-run:
-```bash
-python -m src.cbb.train_enhanced --tune
-```
-This tests 162 param combinations. Best so far was `n_estimators=500, max_depth=4, lr=0.03, min_samples_leaf=15, subsample=0.8` at 51.6% val hit rate.
-
-After tuning completes, the script automatically:
-- Evaluates shrinkage on best model
-- Tunes threshold on validation
-- Reports test performance
-- Saves the best model to `reports/models/gbm.pkl`
+### 1. Rethink Edge Threshold Strategy (HIGH PRIORITY)
+The edge bucket analysis shows the model should bet on **small edges** not large ones. The current threshold logic (bet only when |edge| >= threshold) is backwards for this model. Consider:
+- **Inverting**: Only bet when |edge| < 3 (small disagreements with market)
+- **Capping**: Bet when 0 < |edge| < 3, skip when |edge| > 5
+- This is the single most impactful finding from the tuning run
 
 ### 2. Integrate Bootstrap Threshold Tuning
 `tune_threshold_bootstrap()` was added to `evaluation.py` but isn't wired into `train_enhanced.py` yet. Replace the `tune_threshold()` call with `tune_threshold_bootstrap()` in the training script to get more robust thresholds.
 
-### 3. Consider Reducing Feature Redundancy
+### 3. Address Overfitting
+The tuned model shows clear overfitting (train 82.2% vs val 52.1%). Consider:
+- Increase `min_samples_leaf` (currently 15, try 30-50)
+- Reduce `max_depth` to 3
+- Add `max_features` parameter (e.g., 0.7) for column subsampling
+- Or simply use the default-param model with shrinkage=0.75 (less overfitting)
+
+### 4. Consider Reducing Feature Redundancy
 Feature importance shows `ew_margin_diff` dominates (48%). This is computed from recent game results — essentially a "hot hand" indicator. Consider:
 - Is this feature leaking future info? It uses `.shift(1)` so it should be safe, but verify
 - The KenPom features (which are the core of the model) only contribute ~25% total. The model may be over-relying on recent form
