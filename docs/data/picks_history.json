@@ -1,12 +1,38 @@
 {
-  "last_updated": "2026-03-18T18:36:25.247361+00:00",
+  "last_updated": "2026-03-19T16:13:44.875328+00:00",
   "overall": {
     "wins": 25,
-    "losses": 29,
+    "losses": 30,
     "pushes": 1,
     "pending": 1
   },
   "days": [
+    {
+      "date": "2026-03-18",
+      "picks": [
+        {
+          "home_team": "California Golden Bears",
+          "away_team": "UIC Flames",
+          "home_abbrev": "CAL",
+          "away_abbrev": "UIC",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/25.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/82.png&w=40&h=40",
+          "home_espn_id": 25,
+          "away_espn_id": 82,
+          "pick_team": "UIC Flames",
+          "pick_abbrev": "UIC",
+          "pick_spread": "+5.5",
+          "spread_home": -5.5,
+          "pred_margin": 4.0,
+          "edge": -1.5,
+          "commence_time": "2026-03-19T03:00:00Z",
+          "result": "L",
+          "home_score": 91,
+          "away_score": 73,
+          "cover_margin": -12.5
+        }
+      ]
+    },
     {
       "date": "2026-03-17",
       "picks": [
