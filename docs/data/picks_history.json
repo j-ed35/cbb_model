@@ -1,8 +1,8 @@
 {
   "last_updated": "2026-03-18T18:36:25.247361+00:00",
   "overall": {
-    "wins": 24,
-    "losses": 30,
+    "wins": 25,
+    "losses": 29,
     "pushes": 1,
     "pending": 1
   },
@@ -26,10 +26,10 @@
           "pred_margin": 7.6,
           "edge": 9.1,
           "commence_time": "2026-03-18T01:15:00Z",
-          "result": "L",
-          "home_score": 66,
-          "away_score": 68,
-          "cover_margin": -0.5
+          "result": "W",
+          "home_score": 68,
+          "away_score": 66,
+          "cover_margin": 3.5
         },
         {
           "home_team": "Howard Bison",

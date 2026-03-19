@@ -1,0 +1,89 @@
+{
+  "year": 2026,
+  "regions": {
+    "east": {
+      "name": "East",
+      "teams": [
+        {"seed": 1, "name": "Duke", "abbrev": "DUKE", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/150.png&w=40&h=40", "espn_id": 150, "adj_em": 35.0, "rank": 1, "record": "30-3"},
+        {"seed": 16, "name": "Siena", "abbrev": "SIEN", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2561.png&w=40&h=40", "espn_id": 2561, "adj_em": -2.13, "rank": 200, "record": "22-12"},
+        {"seed": 8, "name": "Ohio State", "abbrev": "OSU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/194.png&w=40&h=40", "espn_id": 194, "adj_em": 22.23, "rank": 26, "record": "21-12"},
+        {"seed": 9, "name": "TCU", "abbrev": "TCU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2628.png&w=40&h=40", "espn_id": 2628, "adj_em": 17.53, "rank": 43, "record": "22-11"},
+        {"seed": 5, "name": "St. John's", "abbrev": "SJU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2599.png&w=40&h=40", "espn_id": 2599, "adj_em": 25.87, "rank": 17, "record": "28-6"},
+        {"seed": 12, "name": "Northern Iowa", "abbrev": "UNI", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2460.png&w=40&h=40", "espn_id": 2460, "adj_em": 11.8, "rank": 71, "record": "23-12"},
+        {"seed": 4, "name": "Kansas", "abbrev": "KU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2305.png&w=40&h=40", "espn_id": 2305, "adj_em": 24.4, "rank": 21, "record": "23-10"},
+        {"seed": 13, "name": "Cal Baptist", "abbrev": "CBU", "logo": "", "espn_id": null, "adj_em": 5.99, "rank": 107, "record": "25-8"},
+        {"seed": 6, "name": "Louisville", "abbrev": "LOU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/97.png&w=40&h=40", "espn_id": 97, "adj_em": 25.4, "rank": 19, "record": "23-10"},
+        {"seed": 11, "name": "South Florida", "abbrev": "USF", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/58.png&w=40&h=40", "espn_id": 58, "adj_em": 16.37, "rank": 48, "record": "25-8"},
+        {"seed": 3, "name": "Michigan State", "abbrev": "MSU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/127.png&w=40&h=40", "espn_id": 127, "adj_em": 28.3, "rank": 9, "record": "25-7"},
+        {"seed": 14, "name": "North Dakota State", "abbrev": "NDSU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2449.png&w=40&h=40", "espn_id": 2449, "adj_em": 5.0, "rank": 115, "record": "27-7"},
+        {"seed": 7, "name": "UCLA", "abbrev": "UCLA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/26.png&w=40&h=40", "espn_id": 26, "adj_em": 21.66, "rank": 27, "record": "23-11"},
+        {"seed": 10, "name": "UCF", "abbrev": "UCF", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2116.png&w=40&h=40", "espn_id": 2116, "adj_em": 14.99, "rank": 54, "record": "21-11"},
+        {"seed": 2, "name": "UConn", "abbrev": "UCONN", "logo": "", "espn_id": null, "adj_em": 30.0, "rank": 7, "record": "28-5"},
+        {"seed": 15, "name": "Furman", "abbrev": "FUR", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/231.png&w=40&h=40", "espn_id": 231, "adj_em": -1.22, "rank": 180, "record": "22-12"}
+      ]
+    },
+    "west": {
+      "name": "West",
+      "teams": [
+        {"seed": 1, "name": "Arizona", "abbrev": "ARIZ", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/12.png&w=40&h=40", "espn_id": 12, "adj_em": 37.6, "rank": 2, "record": "32-2"},
+        {"seed": 16, "name": "LIU", "abbrev": "LIU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2344.png&w=40&h=40", "espn_id": 2344, "adj_em": -3.96, "rank": 216, "record": "24-10"},
+        {"seed": 8, "name": "Villanova", "abbrev": "NOVA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/222.png&w=40&h=40", "espn_id": 222, "adj_em": 19.94, "rank": 33, "record": "24-8"},
+        {"seed": 9, "name": "Utah State", "abbrev": "USU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/328.png&w=40&h=40", "espn_id": 328, "adj_em": 20.84, "rank": 29, "record": "28-6"},
+        {"seed": 5, "name": "Wisconsin", "abbrev": "WISC", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/275.png&w=40&h=40", "espn_id": 275, "adj_em": 23.39, "rank": 22, "record": "24-10"},
+        {"seed": 12, "name": "High Point", "abbrev": "HPU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2272.png&w=40&h=40", "espn_id": 2272, "adj_em": 8.4, "rank": 92, "record": "30-4"},
+        {"seed": 4, "name": "Arkansas", "abbrev": "ARK", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/8.png&w=40&h=40", "espn_id": 8, "adj_em": 24.25, "rank": 20, "record": "24-9"},
+        {"seed": 13, "name": "Hawaii", "abbrev": "HAW", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/62.png&w=40&h=40", "espn_id": 62, "adj_em": 7.17, "rank": 130, "record": "22-11"},
+        {"seed": 6, "name": "BYU", "abbrev": "BYU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/252.png&w=40&h=40", "espn_id": 252, "adj_em": 23.21, "rank": 23, "record": "23-11"},
+        {"seed": 11, "name": "Texas", "abbrev": "TEX", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/251.png&w=40&h=40", "espn_id": 251, "adj_em": 19.13, "rank": 37, "record": "19-14"},
+        {"seed": 3, "name": "Gonzaga", "abbrev": "GONZ", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2250.png&w=40&h=40", "espn_id": 2250, "adj_em": 28.19, "rank": 10, "record": "30-3"},
+        {"seed": 14, "name": "Kennesaw State", "abbrev": "KENN", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/338.png&w=40&h=40", "espn_id": 338, "adj_em": 0.76, "rank": 162, "record": "21-13"},
+        {"seed": 7, "name": "Miami (FL)", "abbrev": "MIA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2390.png&w=40&h=40", "espn_id": 2390, "adj_em": 18.0, "rank": 40, "record": "22-10"},
+        {"seed": 10, "name": "Missouri", "abbrev": "MIZ", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/142.png&w=40&h=40", "espn_id": 142, "adj_em": 14.47, "rank": 52, "record": "21-12"},
+        {"seed": 2, "name": "Purdue", "abbrev": "PUR", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2509.png&w=40&h=40", "espn_id": 2509, "adj_em": 31.18, "rank": 8, "record": "27-8"},
+        {"seed": 15, "name": "Queens", "abbrev": "QU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2801.png&w=40&h=40", "espn_id": 2801, "adj_em": -1.44, "rank": 183, "record": "21-13"}
+      ]
+    },
+    "south": {
+      "name": "South",
+      "teams": [
+        {"seed": 1, "name": "Florida", "abbrev": "FLA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/57.png&w=40&h=40", "espn_id": 57, "adj_em": 33.0, "rank": 4, "record": "29-5"},
+        {"seed": 16, "name": "Prairie View A&M", "abbrev": "PVAM", "logo": "", "espn_id": null, "adj_em": -12.14, "rank": 310, "record": "18-17"},
+        {"seed": 8, "name": "Clemson", "abbrev": "CLEM", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/228.png&w=40&h=40", "espn_id": 228, "adj_em": 19.21, "rank": 36, "record": "24-10"},
+        {"seed": 9, "name": "Iowa", "abbrev": "IOWA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2294.png&w=40&h=40", "espn_id": 2294, "adj_em": 22.44, "rank": 25, "record": "21-12"},
+        {"seed": 5, "name": "Vanderbilt", "abbrev": "VAN", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/238.png&w=40&h=40", "espn_id": 238, "adj_em": 27.48, "rank": 12, "record": "26-8"},
+        {"seed": 12, "name": "McNeese", "abbrev": "MCN", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2377.png&w=40&h=40", "espn_id": 2377, "adj_em": 12.54, "rank": 66, "record": "28-5"},
+        {"seed": 4, "name": "Nebraska", "abbrev": "NEB", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/158.png&w=40&h=40", "espn_id": 158, "adj_em": 26.15, "rank": 14, "record": "26-6"},
+        {"seed": 13, "name": "Troy", "abbrev": "TROY", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2653.png&w=40&h=40", "espn_id": 2653, "adj_em": 1.8, "rank": 143, "record": "22-11"},
+        {"seed": 6, "name": "North Carolina", "abbrev": "UNC", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/153.png&w=40&h=40", "espn_id": 153, "adj_em": 20.82, "rank": 30, "record": "24-8"},
+        {"seed": 11, "name": "VCU", "abbrev": "VCU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2670.png&w=40&h=40", "espn_id": 2670, "adj_em": 17.13, "rank": 46, "record": "27-7"},
+        {"seed": 3, "name": "Illinois", "abbrev": "ILL", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/356.png&w=40&h=40", "espn_id": 356, "adj_em": 30.52, "rank": 5, "record": "28-5"},
+        {"seed": 14, "name": "Penn", "abbrev": "PENN", "logo": "", "espn_id": null, "adj_em": -1.48, "rank": 190, "record": "20-10"},
+        {"seed": 7, "name": "Saint Mary's", "abbrev": "SMC", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2608.png&w=40&h=40", "espn_id": 2608, "adj_em": 19.91, "rank": 34, "record": "27-6"},
+        {"seed": 10, "name": "Texas A&M", "abbrev": "TAMU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/245.png&w=40&h=40", "espn_id": 245, "adj_em": 18.98, "rank": 38, "record": "22-11"},
+        {"seed": 2, "name": "Houston", "abbrev": "HOU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/248.png&w=40&h=40", "espn_id": 248, "adj_em": 33.37, "rank": 5, "record": "28-6"},
+        {"seed": 15, "name": "Idaho", "abbrev": "IDHO", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/70.png&w=40&h=40", "espn_id": 70, "adj_em": 1.51, "rank": 148, "record": "21-14"}
+      ]
+    },
+    "midwest": {
+      "name": "Midwest",
+      "teams": [
+        {"seed": 1, "name": "Michigan", "abbrev": "MICH", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/130.png&w=40&h=40", "espn_id": 130, "adj_em": 37.58, "rank": 3, "record": "31-3"},
+        {"seed": 16, "name": "Howard", "abbrev": "HOW", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/47.png&w=40&h=40", "espn_id": 47, "adj_em": -2.92, "rank": 205, "record": "24-10"},
+        {"seed": 8, "name": "Georgia", "abbrev": "UGA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/61.png&w=40&h=40", "espn_id": 61, "adj_em": 20.45, "rank": 32, "record": "22-10"},
+        {"seed": 9, "name": "Saint Louis", "abbrev": "SLU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/139.png&w=40&h=40", "espn_id": 139, "adj_em": 18.27, "rank": 41, "record": "28-5"},
+        {"seed": 5, "name": "Texas Tech", "abbrev": "TTU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2641.png&w=40&h=40", "espn_id": 2641, "adj_em": 25.23, "rank": 15, "record": "25-8"},
+        {"seed": 12, "name": "Akron", "abbrev": "AKR", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2006.png&w=40&h=40", "espn_id": 2006, "adj_em": 13.45, "rank": 70, "record": "23-10"},
+        {"seed": 4, "name": "Alabama", "abbrev": "ALA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/333.png&w=40&h=40", "espn_id": 333, "adj_em": 25.68, "rank": 18, "record": "23-9"},
+        {"seed": 13, "name": "Hofstra", "abbrev": "HOF", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2275.png&w=40&h=40", "espn_id": 2275, "adj_em": 9.53, "rank": 87, "record": "24-10"},
+        {"seed": 6, "name": "Tennessee", "abbrev": "TENN", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2633.png&w=40&h=40", "espn_id": 2633, "adj_em": 23.57, "rank": 16, "record": "24-9"},
+        {"seed": 11, "name": "Miami (OH)", "abbrev": "M-OH", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/193.png&w=40&h=40", "espn_id": 193, "adj_em": 9.01, "rank": 90, "record": "22-12"},
+        {"seed": 3, "name": "Virginia", "abbrev": "UVA", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/258.png&w=40&h=40", "espn_id": 258, "adj_em": 26.69, "rank": 13, "record": "29-5"},
+        {"seed": 14, "name": "Wright State", "abbrev": "WRST", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2750.png&w=40&h=40", "espn_id": 2750, "adj_em": 2.04, "rank": 140, "record": "23-11"},
+        {"seed": 7, "name": "Kentucky", "abbrev": "UK", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/96.png&w=40&h=40", "espn_id": 96, "adj_em": 21.45, "rank": 28, "record": "21-13"},
+        {"seed": 10, "name": "Santa Clara", "abbrev": "SCU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2541.png&w=40&h=40", "espn_id": 2541, "adj_em": 19.48, "rank": 35, "record": "26-8"},
+        {"seed": 2, "name": "Iowa State", "abbrev": "ISU", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/66.png&w=40&h=40", "espn_id": 66, "adj_em": 32.37, "rank": 6, "record": "27-7"},
+        {"seed": 15, "name": "Tennessee State", "abbrev": "TNST", "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2634.png&w=40&h=40", "espn_id": 2634, "adj_em": -1.81, "rank": 186, "record": "23-9"}
+      ]
+    }
+  }
+}

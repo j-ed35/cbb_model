@@ -502,6 +502,111 @@
       margin: 0 auto;
     }
 
+    /* ═══════════════════════════════════════════════
+       BRACKET TAB
+    ═══════════════════════════════════════════════ */
+    #bracket-section { display: none; background: #fff; border: 1px solid #9aaccb; overflow-x: auto; }
+    .bracket-controls {
+      background: #e8edf5; border-bottom: 1px solid #9aaccb; padding: 8px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .bracket-controls .lbl { font-weight: bold; color: #334d80; text-transform: uppercase; font-size: 11px; }
+    .bracket-controls .bracket-status { margin-left: auto; font-size: 11px; color: #555; }
+    .bracket-export-btn {
+      background: #334d80; color: #fff; border: none; padding: 4px 12px;
+      font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;
+    }
+    .bracket-export-btn:hover { background: #445d90; }
+    .bracket-reset-btn {
+      background: #c8102e; color: #fff; border: none; padding: 4px 12px;
+      font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;
+    }
+    .bracket-reset-btn:hover { background: #a00d24; }
+
+    .bracket-region-tabs {
+      display: flex; border-bottom: 2px solid #002147; background: #334d80;
+    }
+    .bracket-region-tab {
+      padding: 6px 16px; color: #c0d0e8; font-size: 11px; font-weight: bold;
+      text-transform: uppercase; cursor: pointer; border-right: 1px solid #445d90;
+    }
+    .bracket-region-tab:hover { background: #445d90; color: #fff; }
+    .bracket-region-tab.active { background: #fff; color: #002147; }
+
+    .bracket-grid {
+      display: grid;
+      grid-template-columns: 180px 180px 180px 180px 180px 180px;
+      gap: 0;
+      padding: 16px 8px;
+      min-width: 1080px;
+    }
+    .bracket-round-header {
+      text-align: center; font-size: 10px; font-weight: bold; color: #334d80;
+      text-transform: uppercase; padding: 4px 0 8px; border-bottom: 1px solid #ddd;
+      margin-bottom: 8px;
+    }
+
+    .bracket-matchup {
+      border: 1px solid #bbb; margin: 4px 2px; background: #fff; position: relative;
+    }
+    .bracket-team {
+      display: flex; align-items: center; padding: 4px 6px; gap: 4px; cursor: pointer;
+      font-size: 11px; border-bottom: 1px solid #eee; min-height: 28px;
+      transition: background 0.1s;
+    }
+    .bracket-team:last-child { border-bottom: none; }
+    .bracket-team:hover { background: #e8f0ff; }
+    .bracket-team.selected { background: #d4f5d4; font-weight: bold; }
+    .bracket-team.eliminated { color: #aaa; text-decoration: line-through; }
+    .bracket-team .bt-seed {
+      font-size: 9px; color: #888; min-width: 14px; text-align: right; font-weight: bold;
+    }
+    .bracket-team .bt-logo {
+      width: 16px; height: 16px; object-fit: contain;
+    }
+    .bracket-team .bt-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bracket-team .bt-em {
+      font-size: 9px; color: #666; margin-left: auto; white-space: nowrap;
+    }
+
+    .bracket-pred {
+      font-size: 9px; text-align: center; padding: 1px 4px;
+      background: #f0f4ff; color: #334d80; border-top: 1px solid #dde;
+    }
+    .bracket-pred.user-override { background: #fff8e0; color: #886600; }
+
+    .bracket-spacer { min-height: 20px; }
+
+    .bracket-ff {
+      margin: 12px auto; max-width: 360px;
+    }
+    .bracket-ff-title {
+      text-align: center; font-size: 12px; font-weight: bold; color: #002147;
+      text-transform: uppercase; padding: 6px; background: #e8edf5; border: 1px solid #9aaccb;
+    }
+
+    .bracket-full-view {
+      padding: 12px;
+    }
+    .bracket-region-section {
+      margin-bottom: 20px;
+    }
+    .bracket-region-title {
+      font-size: 13px; font-weight: bold; color: #002147; text-transform: uppercase;
+      padding: 6px 8px; background: #334d80; color: #fff; letter-spacing: 1px;
+    }
+    .bracket-rounds {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      padding: 10px 4px;
+      background: #f8f9fc;
+    }
+    .bracket-round-col {
+      display: flex; flex-direction: column; justify-content: space-around;
+      padding: 0 2px;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       .team-name { font-size: 11px; }
@@ -510,6 +615,7 @@
       .record-banner { gap: 16px; }
       .record-stat .stat-val { font-size: 18px; }
       .games-table thead th:nth-child(1) { min-width: 140px; }
+      .bracket-rounds { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -552,6 +658,9 @@
       <td id="tab-history" onclick="setTab('history')">
         History
       </td>
+      <td id="tab-bracket" onclick="setTab('bracket')">
+        Bracket
+      </td>
     </tr></table>
   </div>
 
@@ -587,6 +696,18 @@
   <div id="history-section">
     <div id="history-container">
       <div class="loading">Loading history...</div>
+    </div>
+  </div>
+
+  <!-- Bracket section (hidden until tab selected) -->
+  <div id="bracket-section">
+    <div class="bracket-controls">
+      <span class="lbl">March Madness Bracket</span>
+      <button class="bracket-reset-btn" onclick="resetBracket()">Reset</button>
+      <span class="bracket-status" id="bracket-status">Loading bracket...</span>
+    </div>
+    <div id="bracket-container">
+      <div class="loading">Loading bracket data...</div>
     </div>
   </div>
 
@@ -1158,15 +1279,17 @@
   function setTab(tab) {
     currentTab = tab;
     currentExpanded = null;
-    ['picks','all','history'].forEach(t => {
+    ['picks','all','history','bracket'].forEach(t => {
       document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
     });
     document.getElementById('picks-controls').style.display   = tab==='picks' ? '' : 'none';
     document.getElementById('all-controls').style.display     = tab==='all'   ? '' : 'none';
-    document.getElementById('games-container').style.display  = tab!=='history' ? '' : 'none';
+    document.getElementById('games-container').style.display  = (tab==='picks'||tab==='all') ? '' : 'none';
     document.getElementById('history-section').style.display  = tab==='history' ? 'block' : 'none';
+    document.getElementById('bracket-section').style.display  = tab==='bracket' ? 'block' : 'none';
 
     if (tab==='history') renderHistoryView();
+    else if (tab==='bracket') { if (!bracketLoaded) loadBracket(); }
     else if (picksData) renderCurrentView();
   }
 
@@ -1217,6 +1340,419 @@
       document.getElementById('ticker-record').textContent =
         `SEASON: ${o.wins||0}-${o.losses||0}${pushStr} (${pct})`;
     }
+  }
+
+  // ─── Bracket ───
+  const BRACKET_URL = './data/bracket.json';
+  let bracketData = null;
+  let bracketLoaded = false;
+  // bracketState[region][round][matchupIdx] = winner team object or null
+  let bracketState = {};
+  // Track user overrides vs model picks
+  let bracketUserPicks = {};
+
+  async function loadBracket() {
+    try {
+      const r = await fetch(BRACKET_URL + '?t=' + Date.now());
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      bracketData = await r.json();
+      bracketLoaded = true;
+      initBracketState();
+      renderBracket();
+    } catch (e) {
+      document.getElementById('bracket-container').innerHTML =
+        `<div class="error-msg">Failed to load bracket: ${e.message}</div>`;
+    }
+  }
+
+  function initBracketState() {
+    bracketState = {};
+    bracketUserPicks = {};
+    const saved = localStorage.getItem('cbb-bracket-2026');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        bracketState = parsed.state || {};
+        bracketUserPicks = parsed.userPicks || {};
+        return;
+      } catch(e) {}
+    }
+    // Initialize empty state for each region
+    for (const regionKey of Object.keys(bracketData.regions)) {
+      bracketState[regionKey] = {};
+      bracketUserPicks[regionKey] = {};
+      // Round 1 has 8 matchups, Round 2 has 4, etc.
+      for (let round = 1; round <= 4; round++) {
+        bracketState[regionKey][round] = {};
+        bracketUserPicks[regionKey][round] = {};
+      }
+    }
+    // Final Four + Championship
+    bracketState['ff'] = { 1: {}, 2: {} };
+    bracketUserPicks['ff'] = { 1: {}, 2: {} };
+  }
+
+  function saveBracketState() {
+    localStorage.setItem('cbb-bracket-2026', JSON.stringify({
+      state: bracketState, userPicks: bracketUserPicks
+    }));
+  }
+
+  function resetBracket() {
+    localStorage.removeItem('cbb-bracket-2026');
+    initBracketState();
+    renderBracket();
+  }
+
+  function getR1Matchups(regionKey) {
+    const teams = bracketData.regions[regionKey].teams;
+    // Teams are stored in bracket order: 1,16, 8,9, 5,12, 4,13, 6,11, 3,14, 7,10, 2,15
+    const matchups = [];
+    for (let i = 0; i < 16; i += 2) {
+      matchups.push([teams[i], teams[i+1]]);
+    }
+    return matchups;
+  }
+
+  function getMatchupTeams(regionKey, round, matchupIdx) {
+    if (round === 1) {
+      const m = getR1Matchups(regionKey);
+      return m[matchupIdx] || [null, null];
+    }
+    // For later rounds, teams come from previous round winners
+    const prevRound = round - 1;
+    const t1 = bracketState[regionKey]?.[prevRound]?.[matchupIdx * 2] || null;
+    const t2 = bracketState[regionKey]?.[prevRound]?.[matchupIdx * 2 + 1] || null;
+    return [t1, t2];
+  }
+
+  function predictMatchup(team1, team2) {
+    if (!team1 || !team2) return null;
+    const diff = (team1.adj_em || 0) - (team2.adj_em || 0);
+    return { favored: diff >= 0 ? team1 : team2, margin: Math.abs(diff).toFixed(1), diff };
+  }
+
+  function selectTeam(regionKey, round, matchupIdx, teamIdx) {
+    const teams = getMatchupTeams(regionKey, round, matchupIdx);
+    const selected = teams[teamIdx];
+    if (!selected) return;
+
+    const pred = predictMatchup(teams[0], teams[1]);
+    const isOverride = pred && pred.favored.abbrev !== selected.abbrev;
+
+    bracketState[regionKey][round][matchupIdx] = selected;
+    bracketUserPicks[regionKey][round][matchupIdx] = isOverride ? 'override' : 'model';
+
+    // Clear downstream picks that depended on this matchup
+    clearDownstream(regionKey, round, matchupIdx);
+
+    saveBracketState();
+    renderBracket();
+  }
+
+  function clearDownstream(regionKey, round, matchupIdx) {
+    const maxRound = regionKey === 'ff' ? 2 : 4;
+    let nextRound = round + 1;
+    let nextMatchup = Math.floor(matchupIdx / 2);
+
+    while (nextRound <= maxRound) {
+      const prevWinner = bracketState[regionKey]?.[nextRound]?.[nextMatchup];
+      if (prevWinner) {
+        delete bracketState[regionKey][nextRound][nextMatchup];
+        delete bracketUserPicks[regionKey][nextRound][nextMatchup];
+      }
+      nextMatchup = Math.floor(nextMatchup / 2);
+      nextRound++;
+    }
+
+    // If clearing a regional final (round 4), clear FF downstream
+    if (regionKey !== 'ff' && round <= 4) {
+      const ffIdx = regionKey === 'east' ? 0 : regionKey === 'west' ? 1 : regionKey === 'south' ? 2 : 3;
+      const ffMatchup = Math.floor(ffIdx / 2);
+      if (bracketState['ff']?.[1]?.[ffMatchup]) {
+        delete bracketState['ff'][1][ffMatchup];
+        delete bracketUserPicks['ff'][1][ffMatchup];
+      }
+      if (bracketState['ff']?.[2]?.[0]) {
+        delete bracketState['ff'][2][0];
+        delete bracketUserPicks['ff'][2][0];
+      }
+    }
+  }
+
+  function selectFFTeam(ffRound, matchupIdx, teamIdx) {
+    let teams;
+    if (ffRound === 1) {
+      // Semi-finals: matchup 0 = East winner vs West winner, matchup 1 = South winner vs Midwest winner
+      const regionPairs = [['east','west'],['south','midwest']];
+      const pair = regionPairs[matchupIdx];
+      teams = [
+        bracketState[pair[0]]?.[4]?.[0] || null,
+        bracketState[pair[1]]?.[4]?.[0] || null
+      ];
+    } else {
+      // Championship
+      teams = [
+        bracketState['ff']?.[1]?.[0] || null,
+        bracketState['ff']?.[1]?.[1] || null
+      ];
+    }
+
+    const selected = teams[teamIdx];
+    if (!selected) return;
+
+    const pred = predictMatchup(teams[0], teams[1]);
+    const isOverride = pred && pred.favored.abbrev !== selected.abbrev;
+
+    bracketState['ff'][ffRound][matchupIdx] = selected;
+    bracketUserPicks['ff'][ffRound][matchupIdx] = isOverride ? 'override' : 'model';
+
+    if (ffRound === 1) {
+      delete bracketState['ff'][2][0];
+      delete bracketUserPicks['ff'][2][0];
+    }
+
+    saveBracketState();
+    renderBracket();
+  }
+
+  function autoFillModel() {
+    // Auto-fill all bracket picks using model predictions
+    for (const regionKey of Object.keys(bracketData.regions)) {
+      for (let round = 1; round <= 4; round++) {
+        const numMatchups = 8 / Math.pow(2, round - 1);
+        for (let m = 0; m < numMatchups; m++) {
+          if (bracketState[regionKey]?.[round]?.[m]) continue;
+          const teams = getMatchupTeams(regionKey, round, m);
+          if (!teams[0] || !teams[1]) continue;
+          const pred = predictMatchup(teams[0], teams[1]);
+          if (pred) {
+            bracketState[regionKey][round][m] = pred.favored;
+            bracketUserPicks[regionKey][round][m] = 'model';
+          }
+        }
+      }
+    }
+    // Final Four
+    const regionPairs = [['east','west'],['south','midwest']];
+    for (let i = 0; i < 2; i++) {
+      if (!bracketState['ff']?.[1]?.[i]) {
+        const t1 = bracketState[regionPairs[i][0]]?.[4]?.[0];
+        const t2 = bracketState[regionPairs[i][1]]?.[4]?.[0];
+        if (t1 && t2) {
+          const pred = predictMatchup(t1, t2);
+          if (pred) {
+            bracketState['ff'][1][i] = pred.favored;
+            bracketUserPicks['ff'][1][i] = 'model';
+          }
+        }
+      }
+    }
+    // Championship
+    if (!bracketState['ff']?.[2]?.[0]) {
+      const t1 = bracketState['ff']?.[1]?.[0];
+      const t2 = bracketState['ff']?.[1]?.[1];
+      if (t1 && t2) {
+        const pred = predictMatchup(t1, t2);
+        if (pred) {
+          bracketState['ff'][2][0] = pred.favored;
+          bracketUserPicks['ff'][2][0] = 'model';
+        }
+      }
+    }
+    saveBracketState();
+    renderBracket();
+  }
+
+  function renderBracket() {
+    const container = document.getElementById('bracket-container');
+    if (!bracketData) { container.innerHTML = '<div class="loading">No bracket data</div>'; return; }
+
+    // Count picks
+    let totalPicks = 0, totalSlots = 0, overrides = 0;
+    for (const rk of Object.keys(bracketData.regions)) {
+      for (let rd = 1; rd <= 4; rd++) {
+        const n = 8 / Math.pow(2, rd - 1);
+        totalSlots += n;
+        for (let m = 0; m < n; m++) {
+          if (bracketState[rk]?.[rd]?.[m]) { totalPicks++; if (bracketUserPicks[rk]?.[rd]?.[m]==='override') overrides++; }
+        }
+      }
+    }
+    totalSlots += 3; // FF semis + championship
+    for (let i = 0; i < 2; i++) if (bracketState['ff']?.[1]?.[i]) { totalPicks++; if (bracketUserPicks['ff']?.[1]?.[i]==='override') overrides++; }
+    if (bracketState['ff']?.[2]?.[0]) { totalPicks++; if (bracketUserPicks['ff']?.[2]?.[0]==='override') overrides++; }
+
+    document.getElementById('bracket-status').textContent =
+      `${totalPicks}/${totalSlots} picks made` + (overrides ? ` (${overrides} overrides)` : '') +
+      (totalPicks === totalSlots ? ' — COMPLETE!' : '');
+
+    let html = `<div style="padding:6px 8px;background:#e8edf5;border-bottom:1px solid #9aaccb;">
+      <button class="bracket-export-btn" onclick="autoFillModel()" style="margin-right:6px;">Auto-Fill (Model Picks)</button>
+      <span style="font-size:10px;color:#555;">Click a team to advance them. Model prediction shown below each matchup. Green = your pick matches model. Yellow = you overrode the model.</span>
+    </div>`;
+
+    html += '<div class="bracket-full-view">';
+
+    // Render each region
+    const regionOrder = ['east','west','south','midwest'];
+    for (const regionKey of regionOrder) {
+      const region = bracketData.regions[regionKey];
+      html += `<div class="bracket-region-section">
+        <div class="bracket-region-title">${region.name} Region</div>
+        <div class="bracket-rounds">`;
+
+      const roundNames = ['Round of 64','Round of 32','Sweet 16','Elite 8'];
+      for (let round = 1; round <= 4; round++) {
+        const numMatchups = 8 / Math.pow(2, round - 1);
+        html += `<div class="bracket-round-col">
+          <div class="bracket-round-header">${roundNames[round-1]}</div>`;
+
+        for (let m = 0; m < numMatchups; m++) {
+          const teams = getMatchupTeams(regionKey, round, m);
+          const winner = bracketState[regionKey]?.[round]?.[m] || null;
+          const pred = (teams[0] && teams[1]) ? predictMatchup(teams[0], teams[1]) : null;
+          const pickType = bracketUserPicks[regionKey]?.[round]?.[m] || null;
+
+          html += `<div class="bracket-matchup">`;
+          for (let ti = 0; ti < 2; ti++) {
+            const team = teams[ti];
+            if (team) {
+              const isWinner = winner && winner.abbrev === team.abbrev;
+              const isEliminated = winner && !isWinner;
+              const cls = isWinner ? 'selected' : isEliminated ? 'eliminated' : '';
+              const logoImg = team.logo ? `<img class="bt-logo" src="${team.logo}" alt="" onerror="this.style.display='none'">` : '';
+              html += `<div class="bracket-team ${cls}" onclick="selectTeam('${regionKey}',${round},${m},${ti})">
+                <span class="bt-seed">${team.seed||''}</span>
+                ${logoImg}
+                <span class="bt-name">${team.abbrev}</span>
+                <span class="bt-em">${(team.adj_em||0).toFixed(1)}</span>
+              </div>`;
+            } else {
+              html += `<div class="bracket-team" style="color:#aaa;cursor:default;">
+                <span class="bt-name" style="font-style:italic">TBD</span>
+              </div>`;
+            }
+          }
+          if (pred) {
+            const predCls = pickType === 'override' ? 'bracket-pred user-override' : 'bracket-pred';
+            html += `<div class="${predCls}">Model: ${pred.favored.abbrev} by ${pred.margin}</div>`;
+          }
+          html += `</div>`;
+
+          // Add spacing between matchup pairs in early rounds
+          if (round <= 2 && m % 2 === 1 && m < numMatchups - 1) {
+            html += `<div class="bracket-spacer"></div>`;
+          }
+        }
+        html += `</div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    // Final Four
+    html += `<div class="bracket-region-section">
+      <div class="bracket-region-title">Final Four & Championship</div>
+      <div class="bracket-rounds" style="grid-template-columns: repeat(3, 1fr);">`;
+
+    // Semi 1: East vs West
+    html += `<div class="bracket-round-col"><div class="bracket-round-header">Semifinals</div>`;
+    const ffPairs = [['east','west'],['south','midwest']];
+    const ffLabels = [['East','West'],['South','Midwest']];
+    for (let i = 0; i < 2; i++) {
+      const t1 = bracketState[ffPairs[i][0]]?.[4]?.[0] || null;
+      const t2 = bracketState[ffPairs[i][1]]?.[4]?.[0] || null;
+      const winner = bracketState['ff']?.[1]?.[i] || null;
+      const pred = (t1 && t2) ? predictMatchup(t1, t2) : null;
+      const pickType = bracketUserPicks['ff']?.[1]?.[i] || null;
+
+      html += `<div class="bracket-matchup">`;
+      const ffTeams = [t1, t2];
+      for (let ti = 0; ti < 2; ti++) {
+        const team = ffTeams[ti];
+        if (team) {
+          const isWinner = winner && winner.abbrev === team.abbrev;
+          const isEliminated = winner && !isWinner;
+          const cls = isWinner ? 'selected' : isEliminated ? 'eliminated' : '';
+          const logoImg = team.logo ? `<img class="bt-logo" src="${team.logo}" alt="" onerror="this.style.display='none'">` : '';
+          html += `<div class="bracket-team ${cls}" onclick="selectFFTeam(1,${i},${ti})">
+            <span class="bt-seed">${team.seed||''}</span>
+            ${logoImg}
+            <span class="bt-name">${team.abbrev} (${ffLabels[i][ti]})</span>
+            <span class="bt-em">${(team.adj_em||0).toFixed(1)}</span>
+          </div>`;
+        } else {
+          html += `<div class="bracket-team" style="color:#aaa;cursor:default;">
+            <span class="bt-name" style="font-style:italic">${ffLabels[i][ti]} Winner</span>
+          </div>`;
+        }
+      }
+      if (pred) {
+        const predCls = pickType === 'override' ? 'bracket-pred user-override' : 'bracket-pred';
+        html += `<div class="${predCls}">Model: ${pred.favored.abbrev} by ${pred.margin}</div>`;
+      }
+      html += `</div>`;
+      if (i === 0) html += `<div class="bracket-spacer"></div>`;
+    }
+    html += `</div>`;
+
+    // Championship
+    html += `<div class="bracket-round-col"><div class="bracket-round-header">Championship</div>`;
+    const ct1 = bracketState['ff']?.[1]?.[0] || null;
+    const ct2 = bracketState['ff']?.[1]?.[1] || null;
+    const champWinner = bracketState['ff']?.[2]?.[0] || null;
+    const champPred = (ct1 && ct2) ? predictMatchup(ct1, ct2) : null;
+    const champPickType = bracketUserPicks['ff']?.[2]?.[0] || null;
+
+    html += `<div class="bracket-matchup">`;
+    const champTeams = [ct1, ct2];
+    for (let ti = 0; ti < 2; ti++) {
+      const team = champTeams[ti];
+      if (team) {
+        const isWinner = champWinner && champWinner.abbrev === team.abbrev;
+        const isEliminated = champWinner && !isWinner;
+        const cls = isWinner ? 'selected' : isEliminated ? 'eliminated' : '';
+        const logoImg = team.logo ? `<img class="bt-logo" src="${team.logo}" alt="" onerror="this.style.display='none'">` : '';
+        html += `<div class="bracket-team ${cls}" onclick="selectFFTeam(2,0,${ti})">
+          <span class="bt-seed">${team.seed||''}</span>
+          ${logoImg}
+          <span class="bt-name">${team.abbrev}</span>
+          <span class="bt-em">${(team.adj_em||0).toFixed(1)}</span>
+        </div>`;
+      } else {
+        html += `<div class="bracket-team" style="color:#aaa;cursor:default;">
+          <span class="bt-name" style="font-style:italic">TBD</span>
+        </div>`;
+      }
+    }
+    if (champPred) {
+      const predCls = champPickType === 'override' ? 'bracket-pred user-override' : 'bracket-pred';
+      html += `<div class="${predCls}">Model: ${champPred.favored.abbrev} by ${champPred.margin}</div>`;
+    }
+    html += `</div></div>`;
+
+    // Champion display
+    html += `<div class="bracket-round-col"><div class="bracket-round-header">Champion</div>`;
+    if (champWinner) {
+      const logoImg = champWinner.logo ? `<img class="bt-logo" src="${champWinner.logo}" alt="" style="width:24px;height:24px" onerror="this.style.display='none'">` : '';
+      html += `<div class="bracket-matchup" style="background:#d4f5d4;border-color:#2d7a2d;">
+        <div class="bracket-team selected" style="cursor:default;justify-content:center;font-size:13px;">
+          <span class="bt-seed">${champWinner.seed}</span>
+          ${logoImg}
+          <span class="bt-name" style="font-size:13px;">${champWinner.name}</span>
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="bracket-matchup"><div class="bracket-team" style="color:#aaa;cursor:default;justify-content:center;">
+        <span class="bt-name" style="font-style:italic">Pick your champion!</span>
+      </div></div>`;
+    }
+    html += `</div>`;
+
+    html += `</div></div>`; // close FF rounds + section
+    html += `</div>`; // close bracket-full-view
+
+    container.innerHTML = html;
   }
 
   // ─── Init ───
