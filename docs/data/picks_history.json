@@ -1,12 +1,106 @@
 {
-  "last_updated": "2026-03-19T16:13:44.875328+00:00",
+  "last_updated": "2026-03-21T16:06:55.577965+00:00",
   "overall": {
-    "wins": 25,
-    "losses": 30,
+    "wins": 26,
+    "losses": 33,
     "pushes": 1,
     "pending": 1
   },
   "days": [
+    {
+      "date": "2026-03-20",
+      "picks": [
+        {
+          "home_team": "UCLA Bruins",
+          "away_team": "UCF Knights",
+          "home_abbrev": "UCLA",
+          "away_abbrev": "UCF",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/26.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2116.png&w=40&h=40",
+          "home_espn_id": 26,
+          "away_espn_id": 2116,
+          "pick_team": "UCF Knights",
+          "pick_abbrev": "UCF",
+          "pick_spread": "+5.5",
+          "spread_home": -5.5,
+          "pred_margin": 4.1,
+          "edge": -1.4,
+          "commence_time": "2026-03-20T23:25:00Z",
+          "result": "W",
+          "home_score": 75,
+          "away_score": 71,
+          "cover_margin": 1.5
+        }
+      ]
+    },
+    {
+      "date": "2026-03-19",
+      "picks": [
+        {
+          "home_team": "Ohio State Buckeyes",
+          "away_team": "TCU Horned Frogs",
+          "home_abbrev": "OSU",
+          "away_abbrev": "TCU",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/194.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2628.png&w=40&h=40",
+          "home_espn_id": 194,
+          "away_espn_id": 2628,
+          "pick_team": "Ohio State Buckeyes",
+          "pick_abbrev": "OSU",
+          "pick_spread": "-2.5",
+          "spread_home": -2.5,
+          "pred_margin": 4.4,
+          "edge": 1.9,
+          "commence_time": "2026-03-19T16:20:00Z",
+          "result": "L",
+          "home_score": 64,
+          "away_score": 66,
+          "cover_margin": -4.5
+        },
+        {
+          "home_team": "Louisville Cardinals",
+          "away_team": "South Florida Bulls",
+          "home_abbrev": "LOU",
+          "away_abbrev": "USF",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/97.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/58.png&w=40&h=40",
+          "home_espn_id": 97,
+          "away_espn_id": 58,
+          "pick_team": "Louisville Cardinals",
+          "pick_abbrev": "LOU",
+          "pick_spread": "-4.5",
+          "spread_home": -4.5,
+          "pred_margin": 6.1,
+          "edge": 1.6,
+          "commence_time": "2026-03-19T17:30:00Z",
+          "result": "L",
+          "home_score": 83,
+          "away_score": 79,
+          "cover_margin": -0.5
+        },
+        {
+          "home_team": "North Carolina Tar Heels",
+          "away_team": "VCU Rams",
+          "home_abbrev": "UNC",
+          "away_abbrev": "VCU",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/153.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2670.png&w=40&h=40",
+          "home_espn_id": 153,
+          "away_espn_id": 2670,
+          "pick_team": "North Carolina Tar Heels",
+          "pick_abbrev": "UNC",
+          "pick_spread": "-2.5",
+          "spread_home": -2.5,
+          "pred_margin": 3.7,
+          "edge": 1.2,
+          "commence_time": "2026-03-19T22:50:00Z",
+          "result": "L",
+          "home_score": 78,
+          "away_score": 82,
+          "cover_margin": -6.5
+        }
+      ]
+    },
     {
       "date": "2026-03-18",
       "picks": [
