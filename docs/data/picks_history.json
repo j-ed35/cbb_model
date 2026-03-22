@@ -1,12 +1,59 @@
 {
-  "last_updated": "2026-03-21T16:06:55.577965+00:00",
+  "last_updated": "2026-03-22T15:55:13.933786+00:00",
   "overall": {
-    "wins": 26,
-    "losses": 33,
+    "wins": 27,
+    "losses": 34,
     "pushes": 1,
     "pending": 1
   },
   "days": [
+    {
+      "date": "2026-03-21",
+      "picks": [
+        {
+          "home_team": "Michigan St Spartans",
+          "away_team": "Louisville Cardinals",
+          "home_abbrev": "MSU",
+          "away_abbrev": "LOU",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/127.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/97.png&w=40&h=40",
+          "home_espn_id": 127,
+          "away_espn_id": 97,
+          "pick_team": "Louisville Cardinals",
+          "pick_abbrev": "LOU",
+          "pick_spread": "+5.5",
+          "spread_home": -5.5,
+          "pred_margin": 4.1,
+          "edge": -1.4,
+          "commence_time": "2026-03-21T18:45:00Z",
+          "result": "L",
+          "home_score": 77,
+          "away_score": 69,
+          "cover_margin": -2.5
+        },
+        {
+          "home_team": "Gonzaga Bulldogs",
+          "away_team": "Texas Longhorns",
+          "home_abbrev": "GONZ",
+          "away_abbrev": "TEX",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2250.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/251.png&w=40&h=40",
+          "home_espn_id": 2250,
+          "away_espn_id": 251,
+          "pick_team": "Texas Longhorns",
+          "pick_abbrev": "TEX",
+          "pick_spread": "+6.5",
+          "spread_home": -6.5,
+          "pred_margin": 5.4,
+          "edge": -1.1,
+          "commence_time": "2026-03-21T23:10:00Z",
+          "result": "W",
+          "home_score": 68,
+          "away_score": 74,
+          "cover_margin": 12.5
+        }
+      ]
+    },
     {
       "date": "2026-03-20",
       "picks": [
