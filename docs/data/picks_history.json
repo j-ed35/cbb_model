@@ -1,12 +1,38 @@
 {
-  "last_updated": "2026-03-31T02:32:35.120753+00:00",
+  "last_updated": "2026-04-07T19:35:32.635262+00:00",
   "overall": {
     "wins": 28,
-    "losses": 35,
+    "losses": 36,
     "pushes": 1,
     "pending": 1
   },
   "days": [
+    {
+      "date": "2026-04-02",
+      "picks": [
+        {
+          "home_team": "Auburn Tigers",
+          "away_team": "Illinois St Redbirds",
+          "home_abbrev": "AUB",
+          "away_abbrev": "ILST",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2.png&w=40&h=40",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/2287.png&w=40&h=40",
+          "home_espn_id": 2,
+          "away_espn_id": 2287,
+          "pick_team": "Illinois St Redbirds",
+          "pick_abbrev": "ILST",
+          "pick_spread": "+7.0",
+          "spread_home": -7.0,
+          "pred_margin": 6.0,
+          "edge": -1.0,
+          "commence_time": "2026-04-03T01:30:00Z",
+          "result": "L",
+          "home_score": 88,
+          "away_score": 66,
+          "cover_margin": -15.0
+        }
+      ]
+    },
     {
       "date": "2026-03-25",
       "picks": [
