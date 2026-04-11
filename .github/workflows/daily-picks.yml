@@ -1,9 +1,9 @@
 name: Daily CBB Picks
 
 on:
-  # Run daily at 10:00 AM ET (15:00 UTC)
-  schedule:
-    - cron: '0 15 * * *'
+  # Season is over — schedule disabled. Re-enable next season.
+  # schedule:
+  #   - cron: '0 15 * * *'
 
   # Allow manual trigger
   workflow_dispatch:
